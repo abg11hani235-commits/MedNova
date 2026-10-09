@@ -77,7 +77,8 @@ To regenerate all synthetic charts and ground-truth evaluations deterministicall
 ```bash
 python -m data.generate_synthetic
 ```
-The generator uses fixed RNG seeds (`seed=42`) and ReportLab's `invariant=True` to guarantee byte-identical `.txt` companion files and ground-truth JSON files on every run.
+The generator uses fixed RNG seeds (`seed=42`), ReportLab's `invariant=True`, fixed PDF metadata timestamps (`FIXED_PDF_TIMESTAMP`), and deterministic baseline JPEG compression settings to guarantee byte-identical outputs (including `.txt` companion files, scanned PDFs, and ground-truth JSON files) on every run.
+
 
 ---
 

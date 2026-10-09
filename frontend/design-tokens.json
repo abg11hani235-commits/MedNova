@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Clinsight Design System Tokens",
+  "version": "1.0.0",
+  "colors": {
+    "brand": {
+      "navy": "#1F4E79",
+      "teal": "#0E7C86"
+    },
+    "neutrals": {
+      "background": "#F7FAFB",
+      "card": "#FFFFFF",
+      "text": "#1A2B3C",
+      "muted": "#5B6B7A",
+      "border": "#DDE5EA"
+    },
+    "severity": {
+      "info": {
+        "background": "#DBEAFE",
+        "foreground": "#1E40AF"
+      },
+      "review": {
+        "background": "#FEF3C7",
+        "foreground": "#92400E"
+      },
+      "urgent": {
+        "background": "#FEE2E2",
+        "foreground": "#991B1B"
+      },
+      "done": {
+        "background": "#DCFCE7",
+        "foreground": "#166534"
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "latin": ["Inter", "system-ui", "sans-serif"],
+      "arabic": ["IBM Plex Sans Arabic", "system-ui", "sans-serif"]
+    },
+    "fontSize": {
+      "xs": "12px",
+      "sm": "14px",
+      "base": "16px",
+      "lg": "18px",
+      "xl": "24px"
+    },
+    "lineHeight": {
+      "normal": "1.45"
+    }
+  },
+  "geometry": {
+    "borderRadius": {
+      "sm": "8px",
+      "md": "10px",
+      "lg": "12px",
+      "full": "9999px"
+    },
+    "spacingGrid": "8px"
+  }
+}

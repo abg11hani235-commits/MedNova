@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #F7FAFB;
+    --foreground: #1A2B3C;
+    --card: #FFFFFF;
+    --card-foreground: #1A2B3C;
+    --popover: #FFFFFF;
+    --popover-foreground: #1A2B3C;
+    --primary: #1F4E79;
+    --primary-foreground: #FFFFFF;
+    --secondary: #0E7C86;
+    --secondary-foreground: #FFFFFF;
+    --muted: #F1F4F6;
+    --muted-foreground: #5B6B7A;
+    --accent: #E6F2F3;
+    --accent-foreground: #0B5F67;
+    --border: #DDE5EA;
+    --input: #DDE5EA;
+    --ring: #0E7C86;
+    --radius: 12px;
+
+    /* Severity tokens */
+    --severity-info-bg: #DBEAFE;
+    --severity-info-text: #1E40AF;
+    --severity-review-bg: #FEF3C7;
+    --severity-review-text: #92400E;
+    --severity-urgent-bg: #FEE2E2;
+    --severity-urgent-text: #991B1B;
+    --severity-done-bg: #DCFCE7;
+    --severity-done-text: #166534;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Severity helper classes with icon + text + color */
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-block: 2px;
+  padding-inline: 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.severity-info {
+  background-color: var(--severity-info-bg);
+  color: var(--severity-info-text);
+}
+
+.severity-review {
+  background-color: var(--severity-review-bg);
+  color: var(--severity-review-text);
+}
+
+.severity-urgent {
+  background-color: var(--severity-urgent-bg);
+  color: var(--severity-urgent-text);
+}
+
+.severity-done {
+  background-color: var(--severity-done-bg);
+  color: var(--severity-done-text);
+}

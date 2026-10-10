@@ -185,3 +185,45 @@ def test_scans_have_no_text_layer():
                     assert len(text) == 0, (
                         f"Scan {doc['file_name']} in #{pid} has extractable text!"
                     )
+
+
+def test_scan_pdf_byte_identical_across_runs(tmp_path):
+    """Generates one scan PDF twice and asserts file bytes are strictly identical."""
+    import time
+
+    from data.generate_synthetic import render_unreadable_scan
+
+    pdf1 = tmp_path / "scan_run1.pdf"
+    txt1 = tmp_path / "scan_run1.txt"
+    pdf2 = tmp_path / "scan_run2.pdf"
+    txt2 = tmp_path / "scan_run2.txt"
+
+    # Run 1
+    render_unreadable_scan(
+        pdf_path=pdf1,
+        txt_path=txt1,
+        title="Referral Cover Sheet",
+        date_str="2025-02-10",
+        patient_name="Farouk Adel Mansour",
+        patient_id="1042",
+        np_rng=42,
+    )
+
+    # Brief delay so any dynamic timestamp in PDF metadata would differ
+    time.sleep(0.05)
+
+    # Run 2 with identical seed
+    render_unreadable_scan(
+        pdf_path=pdf2,
+        txt_path=txt2,
+        title="Referral Cover Sheet",
+        date_str="2025-02-10",
+        patient_name="Farouk Adel Mansour",
+        patient_id="1042",
+        np_rng=42,
+    )
+
+    assert txt1.read_bytes() == txt2.read_bytes(), "Scan .txt companion files differ"
+    assert pdf1.read_bytes() == pdf2.read_bytes(), (
+        "Scan PDF bytes differ across runs (metadata timestamps or compression non-deterministic)"
+    )

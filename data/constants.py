@@ -1,7 +1,15 @@
-"""Constants for synthetic diabetes dataset generation and validation."""
+from __future__ import annotations
+
+import time
 
 # Clinical baseline evaluation date
 AS_OF_DATE: str = "2026-06-18"
+
+# Fixed PDF metadata timestamp for deterministic builds (2026-06-18 00:00:00 UTC)
+FIXED_PDF_TIMESTAMP: time.struct_time = time.strptime(
+    f"{AS_OF_DATE} 00:00:00", "%Y-%m-%d %H:%M:%S"
+)
+
 
 # Exact refusal text mandated by AGENTS.md Rule 3 and evaluation spec (straight apostrophe)
 REFUSAL_TEXT: str = "I couldn't find this in the patient's files."

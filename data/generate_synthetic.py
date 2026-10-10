@@ -26,6 +26,7 @@ from reportlab.pdfgen import canvas
 
 from data.constants import (
     AS_OF_DATE,
+    FIXED_PDF_TIMESTAMP,
     REFUSAL_TEXT,
 )
 
@@ -65,7 +66,7 @@ class DocumentBuilder:
 
     def write_txt(self) -> None:
         self.finalize_pages()
-        with open(self.txt_path, "w", encoding="utf-8") as f:
+        with open(self.txt_path, "w", encoding="utf-8", newline="\n") as f:
             for idx, page_lines in enumerate(self.pages_text, start=1):
                 f.write(f"=== PAGE {idx} ===\n")
                 f.writelines(f"{line}\n" for line in page_lines)
@@ -130,10 +131,19 @@ def render_unreadable_scan(
     date_str: str,
     patient_name: str,
     patient_id: str,
-    np_rng: np.random.Generator,
+    np_rng: np.random.Generator | int = 42,
 ) -> None:
-    """Renders a degraded, image-only scanned document without an extractable text layer."""
-    with open(txt_path, "w", encoding="utf-8") as f:
+    """Renders a degraded, image-only scanned document without an extractable text layer.
+
+    Deterministic across runs: fixed PDF metadata timestamps, seeded noise,
+    and deterministic baseline JPEG compression settings.
+    """
+    if isinstance(np_rng, int):
+        rng = np.random.default_rng(np_rng)
+    else:
+        rng = np_rng
+
+    with open(txt_path, "w", encoding="utf-8", newline="\n") as f:
         f.write("=== PAGE 1 ===\n")
         f.write("[SCANNED UNREADABLE DOCUMENT - IMAGE ONLY, OCR COULD NOT PROCESS]\n")
         f.write(f"Document Type: {title}\n")
@@ -170,20 +180,33 @@ def render_unreadable_scan(
         line_pattern = "##### [ILLEGIBLE ARCHIVE SEGMENT] " * 3
         draw.text((40, y), line_pattern[:45], fill=120, font=small_font)
 
-    streak_x = int(np_rng.integers(100, 500))
+    streak_x = int(rng.integers(100, 500))
     draw.line([(streak_x, 0), (streak_x, img_h)], fill=200, width=1)
 
     arr = np.array(img, dtype=np.float32)
-    noise = np_rng.normal(0, 18, arr.shape)
+    noise = rng.normal(0, 18, arr.shape)
     arr = np.clip(arr + noise, 0, 255).astype(np.uint8)
     noisy_img = Image.fromarray(arr)
 
-    angle = float(np_rng.uniform(-1.5, 1.5))
+    angle = float(rng.uniform(-1.5, 1.5))
     rotated_img = noisy_img.rotate(
         angle, resample=Image.Resampling.BILINEAR, fillcolor=255
     )
 
-    rotated_img.save(str(pdf_path), "PDF")
+    rotated_img.save(
+        str(pdf_path),
+        "PDF",
+        title=title,
+        author="ClinSight",
+        creator="ClinSight PDF Generator",
+        producer="Pillow",
+        creationDate=FIXED_PDF_TIMESTAMP,
+        modDate=FIXED_PDF_TIMESTAMP,
+        quality=75,
+        optimize=False,
+        progressive=False,
+        subsampling=0,
+    )
 
 
 def _add_manifest_entry(
@@ -2464,7 +2487,7 @@ def generate_all(
         }
 
         gt_file = base_gt / f"{pid}.json"
-        with open(gt_file, "w", encoding="utf-8") as f:
+        with open(gt_file, "w", encoding="utf-8", newline="\n") as f:
             json.dump(gt_data, f, indent=2, ensure_ascii=False)
 
         summary_records.append(

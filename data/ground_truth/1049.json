@@ -1,0 +1,337 @@
+{
+  "patient_id": "1049",
+  "as_of_date": "2026-06-18",
+  "demographics": {
+    "fake_name": "Samira Gamal Helmy",
+    "age": 63,
+    "diabetes_type": "Type 2",
+    "duration_years": 11,
+    "medications": [
+      "Metformin",
+      "Pioglitazone"
+    ],
+    "fake_national_id": "96108080801049",
+    "fake_phone": "015 0000 1049",
+    "fake_address": "12 Ahmed Orabi St, Mohandessin, Giza (Demo Clinic)"
+  },
+  "planted_findings": [
+    {
+      "id": "f-1049-01",
+      "type": "falling_egfr",
+      "severity": "urgent_review",
+      "statement": "eGFR fell from 76 to 49 over 6 visits. Worth reviewing.",
+      "source_file": "Nephrology_Note_2026-05-04.pdf",
+      "page": 1,
+      "quote": "Glomerular filtration rate decreased to eGFR 49 mL/min/1.73m².",
+      "expected_chunk_hint": "Glomerular filtration rate decreased to eGFR 49 mL/min/1.73m²."
+    },
+    {
+      "id": "f-1049-02",
+      "type": "medication_changed_no_followup",
+      "severity": "review",
+      "statement": "Pioglitazone increased to 30 mg daily without routine follow-up. Worth reviewing.",
+      "source_file": "Visit_Note_2025-11-18.pdf",
+      "page": 2,
+      "quote": "Pioglitazone increased to 30 mg daily without routine liver enzyme monitoring.",
+      "expected_chunk_hint": "Pioglitazone increased to 30 mg daily without routine liver enzyme monitoring."
+    },
+    {
+      "id": "f-1049-03",
+      "type": "hypoglycemia_symptoms",
+      "severity": "review",
+      "statement": "Mild hypoglycemia symptoms reported in visit note.",
+      "source_file": "Visit_Note_2026-02-12.pdf",
+      "page": 2,
+      "quote": "Patient mentions occasional sweating and lightheadedness in late afternoons.",
+      "expected_chunk_hint": "Patient mentions occasional sweating and lightheadedness in late afternoons."
+    },
+    {
+      "id": "f-1049-04",
+      "type": "missed_foot_exam",
+      "severity": "review",
+      "statement": "Diabetic foot examination was not performed during encounter.",
+      "source_file": "Clinic_Note_2026-05-04.pdf",
+      "page": 1,
+      "quote": "Diabetic foot screen not documented for current encounter.",
+      "expected_chunk_hint": "Diabetic foot screen not documented for current encounter."
+    },
+    {
+      "id": "f-1049-05",
+      "type": "missing_uacr",
+      "severity": "review",
+      "statement": "No urine albumin-creatinine ratio found in the last 12 months.",
+      "source_file": null,
+      "page": null,
+      "quote": null,
+      "expected_chunk_hint": "Absence of UACR result across last 12 months."
+    }
+  ],
+  "care_gaps": [
+    {
+      "name": "Retinal exam",
+      "status": "done",
+      "evidence": "Eye_Report_2026-02-12.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Foot exam",
+      "status": "missing",
+      "evidence": "Clinic_Note_2026-05-04.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Urine albumin-creatinine ratio",
+      "status": "missing",
+      "evidence": null,
+      "absence_note": "No record in readable files within 12 months"
+    },
+    {
+      "name": "Lipid panel",
+      "status": "done",
+      "evidence": "Lab_Report_2026-05-04.pdf p.1",
+      "absence_note": null
+    }
+  ],
+  "trends": {
+    "hba1c": [
+      {
+        "date": "2025-03-28",
+        "label": "Mar 2025",
+        "value": 7.2,
+        "unit": "%"
+      },
+      {
+        "date": "2025-07-02",
+        "label": "Jul 2025",
+        "value": 7.1,
+        "unit": "%"
+      },
+      {
+        "date": "2025-09-25",
+        "label": "Sep 2025",
+        "value": 7.3,
+        "unit": "%"
+      },
+      {
+        "date": "2025-11-18",
+        "label": "Nov 2025",
+        "value": 7.4,
+        "unit": "%"
+      },
+      {
+        "date": "2026-02-12",
+        "label": "Feb 2026",
+        "value": 7.2,
+        "unit": "%"
+      },
+      {
+        "date": "2026-05-04",
+        "label": "May 2026",
+        "value": 7.3,
+        "unit": "%"
+      }
+    ],
+    "egfr": [
+      {
+        "date": "2025-03-28",
+        "label": "Mar 2025",
+        "value": 76.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-07-02",
+        "label": "Jul 2025",
+        "value": 70.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-09-25",
+        "label": "Sep 2025",
+        "value": 65.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-11-18",
+        "label": "Nov 2025",
+        "value": 59.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-02-12",
+        "label": "Feb 2026",
+        "value": 54.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-05-04",
+        "label": "May 2026",
+        "value": 49.0,
+        "unit": "mL/min/1.73m²"
+      }
+    ]
+  },
+  "chat_questions": [
+    {
+      "question": "What is the most recent eGFR value?",
+      "answerable": true,
+      "expected_answer_summary": "49 mL/min/1.73m² on 04 May 2026.",
+      "source_file": "Nephrology_Note_2026-05-04.pdf",
+      "page": 1
+    },
+    {
+      "question": "What dose of Pioglitazone is prescribed?",
+      "answerable": true,
+      "expected_answer_summary": "30 mg daily on 18 Nov 2025.",
+      "source_file": "Visit_Note_2025-11-18.pdf",
+      "page": 2
+    },
+    {
+      "question": "Does the patient have a smoking history?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the patient's weekly exercise frequency?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Does the patient own household pets?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the patient's ABO blood type?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    }
+  ],
+  "files_summary": {
+    "total_files": 16,
+    "readable_files": 14,
+    "unreadable_scans": 2,
+    "arabic_notes_count": 1,
+    "manifest": [
+      {
+        "file_name": "Eye_Report_2024-02-10.pdf",
+        "title": "Eye report · 2024-02",
+        "date": "2024-02-10",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-03-28.pdf",
+        "title": "Lab report · Mar 2025",
+        "date": "2025-03-28",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-07-02.pdf",
+        "title": "Lab report · Jul 2025",
+        "date": "2025-07-02",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-09-25.pdf",
+        "title": "Lab report · Sep 2025",
+        "date": "2025-09-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-11-18.pdf",
+        "title": "Lab report · Nov 2025",
+        "date": "2025-11-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-02-12.pdf",
+        "title": "Lab report · Feb 2026",
+        "date": "2026-02-12",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-05-04.pdf",
+        "title": "Lab report · May 2026",
+        "date": "2026-05-04",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-03-28.pdf",
+        "title": "Visit note · Mar 2025",
+        "date": "2025-03-28",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-07-02.pdf",
+        "title": "Visit note · Jul 2025 (Arabic)",
+        "date": "2025-07-02",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-09-25.pdf",
+        "title": "Visit note · Sep 2025",
+        "date": "2025-09-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-11-18.pdf",
+        "title": "Visit note · Nov 2025",
+        "date": "2025-11-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-02-12.pdf",
+        "title": "Visit note · Feb 2026",
+        "date": "2026-02-12",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Nephrology_Note_2026-05-04.pdf",
+        "title": "Nephrology note · 2026-05",
+        "date": "2026-05-04",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Clinic_Note_2026-05-04.pdf",
+        "title": "Clinic note · 2026-05",
+        "date": "2026-05-04",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Scanned_Referral_Cover_Sheet.pdf",
+        "title": "Scanned archive · Referral Cover Sheet",
+        "date": "2024-04-12",
+        "page_count": 1,
+        "is_scan": true
+      },
+      {
+        "file_name": "Scanned_Prior_Fax_Header.pdf",
+        "title": "Scanned archive · Prior Clinic Fax Transmission",
+        "date": "2024-09-18",
+        "page_count": 1,
+        "is_scan": true
+      }
+    ]
+  }
+}

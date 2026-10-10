@@ -1,0 +1,9 @@
+=== PAGE 1 ===
+CLINICAL LABORATORY REPORT
+Patient: #1050 - Amr Nabil Fakhry   Date: 2025-10-08
+Fasting Blood Glucose: 158 mg/dL
+Estimated GFR: 85.0 mL/min/1.73m²
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 7.9%
+

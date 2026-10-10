@@ -1,0 +1,9 @@
+=== PAGE 1 ===
+CLINICAL LABORATORY REPORT
+Patient: #1048 - Youssef Ashraf El-Banna   Date: 2026-06-08
+Fasting Blood Glucose: 186 mg/dL
+Estimated GFR: 88.0 mL/min/1.73m²
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 9.3%
+

@@ -1,0 +1,5 @@
+=== PAGE 1 ===
+OUTPATIENT CLINIC EVALUATION
+Patient: #1049 - Samira Gamal Helmy   Date: 2026-05-04
+Diabetic foot screen not documented for current encounter.
+

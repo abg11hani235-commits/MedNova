@@ -1,0 +1,10 @@
+=== PAGE 1 ===
+OUTPATIENT CLINICAL ENCOUNTER NOTE
+Patient: #1049 - Samira Gamal Helmy   Date: 2025-11-18
+Diagnosis: Type 2 diabetes for 11 years.
+Medications: Metformin, Pioglitazone.
+
+=== PAGE 2 ===
+Progress Evaluation and System Review:
+Pioglitazone increased to 30 mg daily without routine liver enzyme monitoring.
+

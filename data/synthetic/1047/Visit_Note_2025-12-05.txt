@@ -1,0 +1,10 @@
+=== PAGE 1 ===
+OUTPATIENT CLINICAL ENCOUNTER NOTE
+Patient: #1047 - Layla Mahmoud Zahran   Date: 2025-12-05
+Diagnosis: Type 2 diabetes for 9 years.
+Medications: Metformin, Dapagliflozin.
+
+=== PAGE 2 ===
+Progress Evaluation and System Review:
+Dapagliflozin started at 10 mg without documented repeat renal chemistry.
+

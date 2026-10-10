@@ -1,0 +1,13 @@
+=== PAGE 1 ===
+ENDOCRINOLOGY CLINIC - OUTPATIENT VISIT NOTE
+Patient: #1042 - Farouk Adel Mansour   Date: 15 Feb 2026
+Interval History: Patient taking Metformin and Gliclazide as prescribed.
+
+=== PAGE 2 ===
+Physical Examination: Vital signs stable, cardiovascular exam normal.
+
+=== PAGE 3 ===
+Review of Systems and Symptom Log:
+Patient reports occasional episodes of night-time sweating and lightheadedness consistent with mild nocturnal low glucose symptoms.
+Advised on bedtime glucose check and keeping fast-acting carbohydrates available.
+

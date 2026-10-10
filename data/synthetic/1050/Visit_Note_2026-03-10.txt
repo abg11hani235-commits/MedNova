@@ -1,0 +1,10 @@
+=== PAGE 1 ===
+OUTPATIENT CLINICAL ENCOUNTER NOTE
+Patient: #1050 - Amr Nabil Fakhry   Date: 2026-03-10
+Diagnosis: Type 2 diabetes for 7 years.
+Medications: Metformin, Semaglutide.
+
+=== PAGE 2 ===
+Progress Evaluation and System Review:
+Patient denies acute chest pain, shortness of breath, or focal deficits.
+

@@ -76,3 +76,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Synthetic generated PDFs (keep only Patient #1042 demo reference)
+data/synthetic/**/*.pdf
+!data/synthetic/1042/*.pdf
+

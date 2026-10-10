@@ -1,0 +1,8 @@
+=== PAGE 1 ===
+ENDOCRINOLOGY CLINIC - OUTPATIENT VISIT NOTE
+Patient: #1042 - Farouk Adel Mansour   Date: 15 Sep 2025
+Assessment: Glycemic control suboptimal with HbA1c 8.1%.
+
+=== PAGE 2 ===
+Plan: Counsel on diet. If glycemic trend remains elevated, add secondary agent.
+

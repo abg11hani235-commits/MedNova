@@ -1,0 +1,11 @@
+=== PAGE 1 ===
+ENDOCRINOLOGY CLINIC - INTERIM MEDICATION REVIEW
+Patient: #1042 - Farouk Adel Mansour   Date: 12 Nov 2025
+Reason for Encounter: Fasting morning sugars elevated at home (170-190 mg/dL).
+
+=== PAGE 2 ===
+Plan and Prescriptions:
+Gliclazide was added on 12 Nov 2025. No later changes are documented.
+Prescription: Gliclazide modified release 30 mg orally once daily with breakfast.
+Continue Metformin 1000 mg twice daily and Atorvastatin 20 mg nightly.
+

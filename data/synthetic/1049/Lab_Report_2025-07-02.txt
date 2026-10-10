@@ -1,0 +1,9 @@
+=== PAGE 1 ===
+CLINICAL LABORATORY REPORT
+Patient: #1049 - Samira Gamal Helmy   Date: 2025-07-02
+Fasting Blood Glucose: 142 mg/dL
+Estimated GFR: 70.0 mL/min/1.73m²
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 7.1%
+

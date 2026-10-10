@@ -1,0 +1,345 @@
+{
+  "patient_id": "1046",
+  "as_of_date": "2026-06-18",
+  "demographics": {
+    "fake_name": "Hussein Kamel Abdel-Aziz",
+    "age": 72,
+    "diabetes_type": "Type 2",
+    "duration_years": 20,
+    "medications": [
+      "Metformin",
+      "Glimepiride",
+      "Linagliptin"
+    ],
+    "fake_national_id": "95205050501046",
+    "fake_phone": "010 0000 1046",
+    "fake_address": "31 Ramses St, Downtown Cairo (Demo Clinic)"
+  },
+  "planted_findings": [
+    {
+      "id": "f-1046-01",
+      "type": "falling_egfr",
+      "severity": "urgent_review",
+      "statement": "Renal filtration rate deteriorated to eGFR 38 mL/min/1.73m². Worth reviewing.",
+      "source_file": "Nephrology_Note_2026-04-20.pdf",
+      "page": 1,
+      "quote": "Renal filtration rate has deteriorated to eGFR 38 mL/min/1.73m².",
+      "expected_chunk_hint": "Renal filtration rate has deteriorated to eGFR 38 mL/min/1.73m²."
+    },
+    {
+      "id": "f-1046-02",
+      "type": "hypoglycemia_symptoms",
+      "severity": "review",
+      "statement": "Morning hypoglycemia symptoms noted in clinical encounter.",
+      "source_file": "Visit_Note_2026-01-22.pdf",
+      "page": 2,
+      "quote": "Patient describes recurrent morning dizziness and shakiness consistent with hypoglycemia.",
+      "expected_chunk_hint": "Patient describes recurrent morning dizziness and shakiness consistent with hypoglycemia."
+    },
+    {
+      "id": "f-1046-03",
+      "type": "missed_foot_exam",
+      "severity": "review",
+      "statement": "Diabetic foot examination deferred during encounter.",
+      "source_file": "Clinic_Note_2026-04-20.pdf",
+      "page": 1,
+      "quote": "Visual inspection and monofilament foot assessment deferred due to bandage.",
+      "expected_chunk_hint": "Visual inspection and monofilament foot assessment deferred due to bandage."
+    },
+    {
+      "id": "f-1046-04",
+      "type": "overdue_retinal_exam",
+      "severity": "review",
+      "statement": "Retinal exam overdue; last recorded Sep 2023. Worth reviewing.",
+      "source_file": "Eye_Report_2023-09-10.pdf",
+      "page": 1,
+      "quote": "Annual retinal photography archived on 10 Sep 2023.",
+      "expected_chunk_hint": "Annual retinal photography archived on 10 Sep 2023."
+    },
+    {
+      "id": "f-1046-05",
+      "type": "lipid_panel_overdue",
+      "severity": "review",
+      "statement": "Lipid panel overdue; none recorded within past 12 months.",
+      "source_file": "Lab_Report_2024-07-05.pdf",
+      "page": 1,
+      "quote": "Comprehensive lipid panel last evaluated on 05 Jul 2024.",
+      "expected_chunk_hint": "Comprehensive lipid panel last evaluated on 05 Jul 2024."
+    }
+  ],
+  "care_gaps": [
+    {
+      "name": "Retinal exam",
+      "status": "overdue",
+      "evidence": "Eye_Report_2023-09-10.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Foot exam",
+      "status": "missing",
+      "evidence": "Clinic_Note_2026-04-20.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Urine albumin-creatinine ratio",
+      "status": "done",
+      "evidence": "Lab_Report_2026-04-20.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Lipid panel",
+      "status": "overdue",
+      "evidence": "Lab_Report_2024-07-05.pdf p.1",
+      "absence_note": null
+    }
+  ],
+  "trends": {
+    "hba1c": [
+      {
+        "date": "2025-03-10",
+        "label": "Mar 2025",
+        "value": 7.8,
+        "unit": "%"
+      },
+      {
+        "date": "2025-06-12",
+        "label": "Jun 2025",
+        "value": 7.7,
+        "unit": "%"
+      },
+      {
+        "date": "2025-09-18",
+        "label": "Sep 2025",
+        "value": 7.9,
+        "unit": "%"
+      },
+      {
+        "date": "2025-11-20",
+        "label": "Nov 2025",
+        "value": 7.8,
+        "unit": "%"
+      },
+      {
+        "date": "2026-01-22",
+        "label": "Jan 2026",
+        "value": 8.0,
+        "unit": "%"
+      },
+      {
+        "date": "2026-04-20",
+        "label": "Apr 2026",
+        "value": 7.9,
+        "unit": "%"
+      }
+    ],
+    "egfr": [
+      {
+        "date": "2025-03-10",
+        "label": "Mar 2025",
+        "value": 64.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-06-12",
+        "label": "Jun 2025",
+        "value": 59.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-09-18",
+        "label": "Sep 2025",
+        "value": 54.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-11-20",
+        "label": "Nov 2025",
+        "value": 49.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-01-22",
+        "label": "Jan 2026",
+        "value": 44.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-04-20",
+        "label": "Apr 2026",
+        "value": 38.0,
+        "unit": "mL/min/1.73m²"
+      }
+    ]
+  },
+  "chat_questions": [
+    {
+      "question": "What was the most recent eGFR value?",
+      "answerable": true,
+      "expected_answer_summary": "38 mL/min/1.73m² on 20 Apr 2026.",
+      "source_file": "Nephrology_Note_2026-04-20.pdf",
+      "page": 1
+    },
+    {
+      "question": "What oral antidiabetic medications are prescribed?",
+      "answerable": true,
+      "expected_answer_summary": "Metformin, Glimepiride, and Linagliptin.",
+      "source_file": "Visit_Note_2026-01-22.pdf",
+      "page": 1
+    },
+    {
+      "question": "Does the patient smoke?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the patient's marital status?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Has a formal fall risk assessment been completed?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Which eye surgery hospital did the patient visit previously?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    }
+  ],
+  "files_summary": {
+    "total_files": 17,
+    "readable_files": 15,
+    "unreadable_scans": 2,
+    "arabic_notes_count": 2,
+    "manifest": [
+      {
+        "file_name": "Eye_Report_2023-09-10.pdf",
+        "title": "Eye report · 2023-09",
+        "date": "2023-09-10",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2024-07-05.pdf",
+        "title": "Lab report · 2024-07 (Historical)",
+        "date": "2024-07-05",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-03-10.pdf",
+        "title": "Lab report · Mar 2025",
+        "date": "2025-03-10",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-06-12.pdf",
+        "title": "Lab report · Jun 2025",
+        "date": "2025-06-12",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-09-18.pdf",
+        "title": "Lab report · Sep 2025",
+        "date": "2025-09-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-11-20.pdf",
+        "title": "Lab report · Nov 2025",
+        "date": "2025-11-20",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-01-22.pdf",
+        "title": "Lab report · Jan 2026",
+        "date": "2026-01-22",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-04-20.pdf",
+        "title": "Lab report · Apr 2026",
+        "date": "2026-04-20",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-03-10.pdf",
+        "title": "Visit note · Mar 2025",
+        "date": "2025-03-10",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-06-12.pdf",
+        "title": "Visit note · Jun 2025 (Arabic)",
+        "date": "2025-06-12",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-09-18.pdf",
+        "title": "Visit note · Sep 2025",
+        "date": "2025-09-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-11-20.pdf",
+        "title": "Visit note · Nov 2025 (Arabic)",
+        "date": "2025-11-20",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-01-22.pdf",
+        "title": "Visit note · Jan 2026",
+        "date": "2026-01-22",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Nephrology_Note_2026-04-20.pdf",
+        "title": "Nephrology note · 2026-04",
+        "date": "2026-04-20",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Clinic_Note_2026-04-20.pdf",
+        "title": "Clinic note · 2026-04",
+        "date": "2026-04-20",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Scanned_Referral_Cover_Sheet.pdf",
+        "title": "Scanned archive · Referral Cover Sheet",
+        "date": "2024-04-12",
+        "page_count": 1,
+        "is_scan": true
+      },
+      {
+        "file_name": "Scanned_Prior_Fax_Header.pdf",
+        "title": "Scanned archive · Prior Clinic Fax Transmission",
+        "date": "2024-09-18",
+        "page_count": 1,
+        "is_scan": true
+      }
+    ]
+  }
+}

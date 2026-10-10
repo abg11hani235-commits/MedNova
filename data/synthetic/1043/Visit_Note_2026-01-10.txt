@@ -1,0 +1,10 @@
+=== PAGE 1 ===
+OUTPATIENT CLINICAL ENCOUNTER NOTE
+Patient: #1043 - Nadia Tarek Soliman   Date: 2026-01-10
+Diagnosis: Type 1 diabetes for 8 years.
+Medications: Insulin Glargine, Insulin Lispro.
+
+=== PAGE 2 ===
+Progress Evaluation and System Review:
+Patient denies acute chest pain, shortness of breath, or focal deficits.
+

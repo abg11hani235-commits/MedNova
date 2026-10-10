@@ -1,0 +1,10 @@
+=== PAGE 1 ===
+OUTPATIENT CLINICAL ENCOUNTER NOTE
+Patient: #1045 - Dina Sherif Radwan   Date: 2025-11-04
+Diagnosis: Type 2 diabetes for 4 years.
+Medications: Metformin, Dulaglutide.
+
+=== PAGE 2 ===
+Progress Evaluation and System Review:
+Dulaglutide initiated at 0.75 mg weekly without documented follow-up.
+

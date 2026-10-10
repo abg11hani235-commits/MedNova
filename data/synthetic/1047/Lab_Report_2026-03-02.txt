@@ -1,0 +1,9 @@
+=== PAGE 1 ===
+CLINICAL LABORATORY REPORT
+Patient: #1047 - Layla Mahmoud Zahran   Date: 2026-03-02
+Fasting Blood Glucose: 176 mg/dL
+Estimated GFR: 62.0 mL/min/1.73m²
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 8.8%
+

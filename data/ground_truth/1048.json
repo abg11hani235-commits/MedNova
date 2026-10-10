@@ -1,0 +1,337 @@
+{
+  "patient_id": "1048",
+  "as_of_date": "2026-06-18",
+  "demographics": {
+    "fake_name": "Youssef Ashraf El-Banna",
+    "age": 42,
+    "diabetes_type": "Type 1",
+    "duration_years": 14,
+    "medications": [
+      "Insulin Glargine",
+      "Insulin Aspart"
+    ],
+    "fake_national_id": "98207070701048",
+    "fake_phone": "012 0000 1048",
+    "fake_address": "5 El-Horreya Ave, Heliopolis, Cairo (Synthetic Center)"
+  },
+  "planted_findings": [
+    {
+      "id": "f-1048-01",
+      "type": "hypoglycemia_symptoms",
+      "severity": "urgent_review",
+      "statement": "Severe nocturnal hypoglycemia episode reported. Worth reviewing.",
+      "source_file": "Visit_Note_2026-03-25.pdf",
+      "page": 2,
+      "quote": "Severe nocturnal hypoglycemia episode reported with confusion requiring third-party assistance.",
+      "expected_chunk_hint": "Severe nocturnal hypoglycemia episode reported with confusion requiring third-party assistance."
+    },
+    {
+      "id": "f-1048-02",
+      "type": "rising_hba1c",
+      "severity": "review",
+      "statement": "HbA1c has risen across 6 visits (7.6 to 9.3). Worth reviewing.",
+      "source_file": "Lab_Report_2026-06-08.pdf",
+      "page": 2,
+      "quote": "Glycated Hemoglobin (HbA1c): 9.3%",
+      "expected_chunk_hint": "Glycated Hemoglobin (HbA1c): 9.3%"
+    },
+    {
+      "id": "f-1048-03",
+      "type": "overdue_retinal_exam",
+      "severity": "review",
+      "statement": "Retinal exam overdue; last recorded Mar 2024. Worth reviewing.",
+      "source_file": "Eye_Report_2024-03-02.pdf",
+      "page": 1,
+      "quote": "Fundus examination recorded on 02 Mar 2024 showing no retinopathy.",
+      "expected_chunk_hint": "Fundus examination recorded on 02 Mar 2024 showing no retinopathy."
+    },
+    {
+      "id": "f-1048-04",
+      "type": "missing_uacr",
+      "severity": "review",
+      "statement": "No urine albumin-creatinine ratio found in the last 12 months.",
+      "source_file": null,
+      "page": null,
+      "quote": null,
+      "expected_chunk_hint": "Absence of UACR test in past 12 months."
+    },
+    {
+      "id": "f-1048-05",
+      "type": "lipid_panel_overdue",
+      "severity": "review",
+      "statement": "Lipid panel overdue; none recorded in past 12 months.",
+      "source_file": "Lab_Report_2024-10-15.pdf",
+      "page": 1,
+      "quote": "Lipid evaluation last documented on 15 Oct 2024.",
+      "expected_chunk_hint": "Lipid evaluation last documented on 15 Oct 2024."
+    }
+  ],
+  "care_gaps": [
+    {
+      "name": "Retinal exam",
+      "status": "overdue",
+      "evidence": "Eye_Report_2024-03-02.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Foot exam",
+      "status": "done",
+      "evidence": "Clinic_Note_2026-06-08.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Urine albumin-creatinine ratio",
+      "status": "missing",
+      "evidence": null,
+      "absence_note": "No record in readable files within 12 months"
+    },
+    {
+      "name": "Lipid panel",
+      "status": "overdue",
+      "evidence": "Lab_Report_2024-10-15.pdf p.1",
+      "absence_note": null
+    }
+  ],
+  "trends": {
+    "hba1c": [
+      {
+        "date": "2025-04-18",
+        "label": "Apr 2025",
+        "value": 7.6,
+        "unit": "%"
+      },
+      {
+        "date": "2025-07-25",
+        "label": "Jul 2025",
+        "value": 7.9,
+        "unit": "%"
+      },
+      {
+        "date": "2025-10-30",
+        "label": "Oct 2025",
+        "value": 8.3,
+        "unit": "%"
+      },
+      {
+        "date": "2026-01-14",
+        "label": "Jan 2026",
+        "value": 8.6,
+        "unit": "%"
+      },
+      {
+        "date": "2026-03-25",
+        "label": "Mar 2026",
+        "value": 8.9,
+        "unit": "%"
+      },
+      {
+        "date": "2026-06-08",
+        "label": "Jun 2026",
+        "value": 9.3,
+        "unit": "%"
+      }
+    ],
+    "egfr": [
+      {
+        "date": "2025-04-18",
+        "label": "Apr 2025",
+        "value": 92.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-07-25",
+        "label": "Jul 2025",
+        "value": 90.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-10-30",
+        "label": "Oct 2025",
+        "value": 91.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-01-14",
+        "label": "Jan 2026",
+        "value": 89.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-03-25",
+        "label": "Mar 2026",
+        "value": 90.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-06-08",
+        "label": "Jun 2026",
+        "value": 88.0,
+        "unit": "mL/min/1.73m²"
+      }
+    ]
+  },
+  "chat_questions": [
+    {
+      "question": "What insulin products are used?",
+      "answerable": true,
+      "expected_answer_summary": "Insulin Glargine and Insulin Aspart.",
+      "source_file": "Visit_Note_2026-06-08.pdf",
+      "page": 1
+    },
+    {
+      "question": "What was the latest HbA1c value?",
+      "answerable": true,
+      "expected_answer_summary": "9.3% on 08 Jun 2026.",
+      "source_file": "Lab_Report_2026-06-08.pdf",
+      "page": 2
+    },
+    {
+      "question": "Does the patient smoke?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Does the patient have a gluten allergy?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the serial number of the patient's insulin pump?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the patient's current eyeglass prescription?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    }
+  ],
+  "files_summary": {
+    "total_files": 16,
+    "readable_files": 14,
+    "unreadable_scans": 2,
+    "arabic_notes_count": 1,
+    "manifest": [
+      {
+        "file_name": "Eye_Report_2024-03-02.pdf",
+        "title": "Eye report · 2024-03",
+        "date": "2024-03-02",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2024-10-15.pdf",
+        "title": "Lab report · 2024-10 (Historical)",
+        "date": "2024-10-15",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-04-18.pdf",
+        "title": "Lab report · Apr 2025",
+        "date": "2025-04-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-07-25.pdf",
+        "title": "Lab report · Jul 2025",
+        "date": "2025-07-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-10-30.pdf",
+        "title": "Lab report · Oct 2025",
+        "date": "2025-10-30",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-01-14.pdf",
+        "title": "Lab report · Jan 2026",
+        "date": "2026-01-14",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-03-25.pdf",
+        "title": "Lab report · Mar 2026",
+        "date": "2026-03-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-06-08.pdf",
+        "title": "Lab report · Jun 2026",
+        "date": "2026-06-08",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-04-18.pdf",
+        "title": "Visit note · Apr 2025",
+        "date": "2025-04-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-07-25.pdf",
+        "title": "Visit note · Jul 2025 (Arabic)",
+        "date": "2025-07-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-10-30.pdf",
+        "title": "Visit note · Oct 2025",
+        "date": "2025-10-30",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-01-14.pdf",
+        "title": "Visit note · Jan 2026",
+        "date": "2026-01-14",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-03-25.pdf",
+        "title": "Visit note · Mar 2026",
+        "date": "2026-03-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-06-08.pdf",
+        "title": "Visit note · Jun 2026",
+        "date": "2026-06-08",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Scanned_Referral_Cover_Sheet.pdf",
+        "title": "Scanned archive · Referral Cover Sheet",
+        "date": "2024-04-12",
+        "page_count": 1,
+        "is_scan": true
+      },
+      {
+        "file_name": "Scanned_Prior_Fax_Header.pdf",
+        "title": "Scanned archive · Prior Clinic Fax Transmission",
+        "date": "2024-09-18",
+        "page_count": 1,
+        "is_scan": true
+      }
+    ]
+  }
+}

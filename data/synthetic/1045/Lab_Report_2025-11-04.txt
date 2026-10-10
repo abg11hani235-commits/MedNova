@@ -1,0 +1,9 @@
+=== PAGE 1 ===
+CLINICAL LABORATORY REPORT
+Patient: #1045 - Dina Sherif Radwan   Date: 2025-11-04
+Fasting Blood Glucose: 154 mg/dL
+Estimated GFR: 98.0 mL/min/1.73m²
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 7.7%
+

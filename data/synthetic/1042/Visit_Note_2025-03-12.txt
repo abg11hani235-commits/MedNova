@@ -1,0 +1,10 @@
+=== PAGE 1 ===
+ENDOCRINOLOGY CLINIC - OUTPATIENT VISIT NOTE
+Patient: #1042 - Farouk Adel Mansour   Date: 12 Mar 2025
+Chief Complaint: Routine diabetes follow-up. Diagnosed 12 years ago.
+Current Medications: Metformin 1000 mg twice daily, Atorvastatin 20 mg at bedtime.
+
+=== PAGE 2 ===
+Vital signs: BP 130/80 mmHg, Pulse 72 bpm, BMI 28.4 kg/m².
+Plan: Continue current therapy. Return in 3 months with repeat labs.
+

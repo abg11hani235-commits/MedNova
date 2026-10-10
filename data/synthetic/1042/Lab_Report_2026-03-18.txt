@@ -1,0 +1,21 @@
+=== PAGE 1 ===
+AL-BORG CLINICAL LABORATORIES - ROUTINE DIABETES PANEL
+Patient: #1042 - Farouk Adel Mansour   Date: 18 Mar 2026
+Fasting Blood Glucose: 180 mg/dL
+Serum Creatinine: 1.30 mg/dL
+
+=== PAGE 2 ===
+Estimated GFR: 61 mL/min/1.73m²
+Glycated Hemoglobin (HbA1c): 8.7%
+
+=== PAGE 3 ===
+Electrolytes: Sodium 139 mmol/L, Potassium 4.5 mmol/L, Chloride 102 mmol/L
+
+=== PAGE 4 ===
+LIPID PROFILE COMPREHENSIVE PANEL
+Total Cholesterol: 165 mg/dL
+Triglycerides: 155 mg/dL
+HDL Cholesterol: 46 mg/dL
+LDL Cholesterol: 88 mg/dL
+Lipid panel completed this year.
+

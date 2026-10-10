@@ -1,0 +1,338 @@
+{
+  "patient_id": "1044",
+  "as_of_date": "2026-06-18",
+  "demographics": {
+    "fake_name": "Ibrahim Samir El-Kady",
+    "age": 67,
+    "diabetes_type": "Type 2",
+    "duration_years": 15,
+    "medications": [
+      "Metformin",
+      "Sitagliptin",
+      "Empagliflozin"
+    ],
+    "fake_national_id": "95703030301044",
+    "fake_phone": "012 0000 1044",
+    "fake_address": "7 Abbasia Square, Cairo (Synthetic Clinic)"
+  },
+  "planted_findings": [
+    {
+      "id": "f-1044-01",
+      "type": "falling_egfr",
+      "severity": "urgent_review",
+      "statement": "eGFR fell from 72 to 48 over 6 visits. Worth reviewing.",
+      "source_file": "Nephrology_Note_2026-05-11.pdf",
+      "page": 1,
+      "quote": "Estimated GFR is 48 mL/min/1.73m², reflecting a progressive decline from 72.",
+      "expected_chunk_hint": "Estimated GFR is 48 mL/min/1.73m², reflecting a progressive decline from 72."
+    },
+    {
+      "id": "f-1044-02",
+      "type": "medication_changed_no_followup",
+      "severity": "review",
+      "statement": "Empagliflozin dosage adjusted without documented follow-up. Worth reviewing.",
+      "source_file": "Visit_Note_2025-10-14.pdf",
+      "page": 2,
+      "quote": "Empagliflozin dosage adjusted to 25 mg daily without subsequent follow-up assessment.",
+      "expected_chunk_hint": "Empagliflozin dosage adjusted to 25 mg daily without subsequent follow-up assessment."
+    },
+    {
+      "id": "f-1044-03",
+      "type": "missing_uacr",
+      "severity": "review",
+      "statement": "No urine albumin-creatinine ratio found in the last 12 months.",
+      "source_file": null,
+      "page": null,
+      "quote": null,
+      "expected_chunk_hint": "Absence of UACR result across last 12 months."
+    },
+    {
+      "id": "f-1044-04",
+      "type": "overdue_retinal_exam",
+      "severity": "review",
+      "statement": "Retinal exam overdue; last recorded Nov 2023. Worth reviewing.",
+      "source_file": "Eye_Report_2023-11-20.pdf",
+      "page": 1,
+      "quote": "Retinal exam completed on 20 Nov 2023 with mild non-proliferative changes.",
+      "expected_chunk_hint": "Retinal exam completed on 20 Nov 2023 with mild non-proliferative changes."
+    },
+    {
+      "id": "f-1044-05",
+      "type": "missed_foot_exam",
+      "severity": "review",
+      "statement": "Diabetic foot examination not performed during latest visit.",
+      "source_file": "Clinic_Note_2026-05-11.pdf",
+      "page": 1,
+      "quote": "Comprehensive foot examination was not performed during this visit.",
+      "expected_chunk_hint": "Comprehensive foot examination was not performed during this visit."
+    }
+  ],
+  "care_gaps": [
+    {
+      "name": "Retinal exam",
+      "status": "overdue",
+      "evidence": "Eye_Report_2023-11-20.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Foot exam",
+      "status": "missing",
+      "evidence": "Clinic_Note_2026-05-11.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Urine albumin-creatinine ratio",
+      "status": "missing",
+      "evidence": null,
+      "absence_note": "No record in readable files within 12 months"
+    },
+    {
+      "name": "Lipid panel",
+      "status": "done",
+      "evidence": "Lab_Report_2026-05-11.pdf p.1",
+      "absence_note": null
+    }
+  ],
+  "trends": {
+    "hba1c": [
+      {
+        "date": "2025-03-20",
+        "label": "Mar 2025",
+        "value": 7.3,
+        "unit": "%"
+      },
+      {
+        "date": "2025-06-25",
+        "label": "Jun 2025",
+        "value": 7.4,
+        "unit": "%"
+      },
+      {
+        "date": "2025-10-14",
+        "label": "Oct 2025",
+        "value": 7.2,
+        "unit": "%"
+      },
+      {
+        "date": "2025-12-28",
+        "label": "Dec 2025",
+        "value": 7.3,
+        "unit": "%"
+      },
+      {
+        "date": "2026-03-15",
+        "label": "Mar 2026",
+        "value": 7.5,
+        "unit": "%"
+      },
+      {
+        "date": "2026-05-11",
+        "label": "May 2026",
+        "value": 7.4,
+        "unit": "%"
+      }
+    ],
+    "egfr": [
+      {
+        "date": "2025-03-20",
+        "label": "Mar 2025",
+        "value": 72.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-06-25",
+        "label": "Jun 2025",
+        "value": 67.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-10-14",
+        "label": "Oct 2025",
+        "value": 61.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-12-28",
+        "label": "Dec 2025",
+        "value": 56.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-03-15",
+        "label": "Mar 2026",
+        "value": 52.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-05-11",
+        "label": "May 2026",
+        "value": 48.0,
+        "unit": "mL/min/1.73m²"
+      }
+    ]
+  },
+  "chat_questions": [
+    {
+      "question": "What is the most recent eGFR measurement?",
+      "answerable": true,
+      "expected_answer_summary": "48 mL/min/1.73m² on 11 May 2026.",
+      "source_file": "Nephrology_Note_2026-05-11.pdf",
+      "page": 1
+    },
+    {
+      "question": "What dose of Empagliflozin was prescribed?",
+      "answerable": true,
+      "expected_answer_summary": "25 mg daily on 14 Oct 2025.",
+      "source_file": "Visit_Note_2025-10-14.pdf",
+      "page": 2
+    },
+    {
+      "question": "Does the patient smoke tobacco?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Does the patient use a hearing aid?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "When was the patient's last dental visit?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the patient's daily caffeine consumption?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    }
+  ],
+  "files_summary": {
+    "total_files": 16,
+    "readable_files": 14,
+    "unreadable_scans": 2,
+    "arabic_notes_count": 1,
+    "manifest": [
+      {
+        "file_name": "Eye_Report_2023-11-20.pdf",
+        "title": "Eye report · 2023-11",
+        "date": "2023-11-20",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-03-20.pdf",
+        "title": "Lab report · Mar 2025",
+        "date": "2025-03-20",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-06-25.pdf",
+        "title": "Lab report · Jun 2025",
+        "date": "2025-06-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-10-14.pdf",
+        "title": "Lab report · Oct 2025",
+        "date": "2025-10-14",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-12-28.pdf",
+        "title": "Lab report · Dec 2025",
+        "date": "2025-12-28",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-03-15.pdf",
+        "title": "Lab report · Mar 2026",
+        "date": "2026-03-15",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-05-11.pdf",
+        "title": "Lab report · May 2026",
+        "date": "2026-05-11",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-03-20.pdf",
+        "title": "Visit note · Mar 2025",
+        "date": "2025-03-20",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-06-25.pdf",
+        "title": "Visit note · Jun 2025 (Arabic)",
+        "date": "2025-06-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-10-14.pdf",
+        "title": "Visit note · Oct 2025",
+        "date": "2025-10-14",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-12-28.pdf",
+        "title": "Visit note · Dec 2025",
+        "date": "2025-12-28",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-03-15.pdf",
+        "title": "Visit note · Mar 2026",
+        "date": "2026-03-15",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Nephrology_Note_2026-05-11.pdf",
+        "title": "Nephrology note · 2026-05",
+        "date": "2026-05-11",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Clinic_Note_2026-05-11.pdf",
+        "title": "Clinic note · 2026-05",
+        "date": "2026-05-11",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Scanned_Referral_Cover_Sheet.pdf",
+        "title": "Scanned archive · Referral Cover Sheet",
+        "date": "2024-04-12",
+        "page_count": 1,
+        "is_scan": true
+      },
+      {
+        "file_name": "Scanned_Prior_Fax_Header.pdf",
+        "title": "Scanned archive · Prior Clinic Fax Transmission",
+        "date": "2024-09-18",
+        "page_count": 1,
+        "is_scan": true
+      }
+    ]
+  }
+}

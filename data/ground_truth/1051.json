@@ -1,0 +1,338 @@
+{
+  "patient_id": "1051",
+  "as_of_date": "2026-06-18",
+  "demographics": {
+    "fake_name": "Mona Raafat El-Shazly",
+    "age": 69,
+    "diabetes_type": "Type 2",
+    "duration_years": 16,
+    "medications": [
+      "Metformin",
+      "Glimepiride",
+      "Atorvastatin"
+    ],
+    "fake_national_id": "95510101001051",
+    "fake_phone": "011 0000 1051",
+    "fake_address": "8 Corniche El-Nile, Garden City, Cairo (Synthetic Center)"
+  },
+  "planted_findings": [
+    {
+      "id": "f-1051-01",
+      "type": "falling_egfr",
+      "severity": "urgent_review",
+      "statement": "Serum eGFR declined to 44 mL/min/1.73m² under ongoing treatment. Worth reviewing.",
+      "source_file": "Nephrology_Note_2026-05-25.pdf",
+      "page": 1,
+      "quote": "Serum eGFR declined to 44 mL/min/1.73m² under ongoing treatment.",
+      "expected_chunk_hint": "Serum eGFR declined to 44 mL/min/1.73m² under ongoing treatment."
+    },
+    {
+      "id": "f-1051-02",
+      "type": "rising_hba1c",
+      "severity": "review",
+      "statement": "HbA1c has risen across 6 visits (7.6 to 9.2). Worth reviewing.",
+      "source_file": "Lab_Report_2026-05-25.pdf",
+      "page": 2,
+      "quote": "Glycated Hemoglobin (HbA1c): 9.2%",
+      "expected_chunk_hint": "Glycated Hemoglobin (HbA1c): 9.2%"
+    },
+    {
+      "id": "f-1051-03",
+      "type": "hypoglycemia_symptoms",
+      "severity": "review",
+      "statement": "Hypoglycemia episodes noted in clinician record.",
+      "source_file": "Visit_Note_2026-03-04.pdf",
+      "page": 2,
+      "quote": "Patient relates episodes of profuse diaphoresis and trembling before lunch.",
+      "expected_chunk_hint": "Patient relates episodes of profuse diaphoresis and trembling before lunch."
+    },
+    {
+      "id": "f-1051-04",
+      "type": "medication_changed_no_followup",
+      "severity": "review",
+      "statement": "Glimepiride increased to 4 mg daily without scheduling safety check. Worth reviewing.",
+      "source_file": "Visit_Note_2025-12-18.pdf",
+      "page": 2,
+      "quote": "Glimepiride increased to 4 mg daily without scheduling safety check.",
+      "expected_chunk_hint": "Glimepiride increased to 4 mg daily without scheduling safety check."
+    },
+    {
+      "id": "f-1051-05",
+      "type": "overdue_retinal_exam",
+      "severity": "review",
+      "statement": "Retinal exam overdue; last recorded Dec 2023. Worth reviewing.",
+      "source_file": "Eye_Report_2023-12-08.pdf",
+      "page": 1,
+      "quote": "Dilated eye examination dated 08 Dec 2023 without acute retinopathy.",
+      "expected_chunk_hint": "Dilated eye examination dated 08 Dec 2023 without acute retinopathy."
+    }
+  ],
+  "care_gaps": [
+    {
+      "name": "Retinal exam",
+      "status": "overdue",
+      "evidence": "Eye_Report_2023-12-08.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Foot exam",
+      "status": "done",
+      "evidence": "Clinic_Note_2026-05-25.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Urine albumin-creatinine ratio",
+      "status": "done",
+      "evidence": "Lab_Report_2026-05-25.pdf p.1",
+      "absence_note": null
+    },
+    {
+      "name": "Lipid panel",
+      "status": "done",
+      "evidence": "Lab_Report_2026-05-25.pdf p.2",
+      "absence_note": null
+    }
+  ],
+  "trends": {
+    "hba1c": [
+      {
+        "date": "2025-03-16",
+        "label": "Mar 2025",
+        "value": 7.6,
+        "unit": "%"
+      },
+      {
+        "date": "2025-07-02",
+        "label": "Jul 2025",
+        "value": 7.9,
+        "unit": "%"
+      },
+      {
+        "date": "2025-09-14",
+        "label": "Sep 2025",
+        "value": 8.2,
+        "unit": "%"
+      },
+      {
+        "date": "2025-11-10",
+        "label": "Nov 2025",
+        "value": 8.5,
+        "unit": "%"
+      },
+      {
+        "date": "2026-03-04",
+        "label": "Mar 2026",
+        "value": 8.8,
+        "unit": "%"
+      },
+      {
+        "date": "2026-05-25",
+        "label": "May 2026",
+        "value": 9.2,
+        "unit": "%"
+      }
+    ],
+    "egfr": [
+      {
+        "date": "2025-03-16",
+        "label": "Mar 2025",
+        "value": 69.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-07-02",
+        "label": "Jul 2025",
+        "value": 63.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-09-14",
+        "label": "Sep 2025",
+        "value": 58.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2025-11-10",
+        "label": "Nov 2025",
+        "value": 53.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-03-04",
+        "label": "Mar 2026",
+        "value": 49.0,
+        "unit": "mL/min/1.73m²"
+      },
+      {
+        "date": "2026-05-25",
+        "label": "May 2026",
+        "value": 44.0,
+        "unit": "mL/min/1.73m²"
+      }
+    ]
+  },
+  "chat_questions": [
+    {
+      "question": "What is the latest eGFR value?",
+      "answerable": true,
+      "expected_answer_summary": "44 mL/min/1.73m² on 25 May 2026.",
+      "source_file": "Nephrology_Note_2026-05-25.pdf",
+      "page": 1
+    },
+    {
+      "question": "What was the latest HbA1c result?",
+      "answerable": true,
+      "expected_answer_summary": "9.2% on 25 May 2026.",
+      "source_file": "Lab_Report_2026-05-25.pdf",
+      "page": 2
+    },
+    {
+      "question": "Does the patient smoke?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Has the patient received the flu vaccine this year?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "What is the dose of the patient's calcium supplement?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    },
+    {
+      "question": "Which preferred pharmacy is listed in the patient's record?",
+      "answerable": false,
+      "expected_answer_summary": "I couldn't find this in the patient's files.",
+      "source_file": null,
+      "page": null
+    }
+  ],
+  "files_summary": {
+    "total_files": 16,
+    "readable_files": 14,
+    "unreadable_scans": 2,
+    "arabic_notes_count": 2,
+    "manifest": [
+      {
+        "file_name": "Eye_Report_2023-12-08.pdf",
+        "title": "Eye report · 2023-12",
+        "date": "2023-12-08",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-03-16.pdf",
+        "title": "Lab report · Mar 2025",
+        "date": "2025-03-16",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-07-02.pdf",
+        "title": "Lab report · Jul 2025",
+        "date": "2025-07-02",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-09-14.pdf",
+        "title": "Lab report · Sep 2025",
+        "date": "2025-09-14",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2025-11-10.pdf",
+        "title": "Lab report · Nov 2025",
+        "date": "2025-11-10",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-03-04.pdf",
+        "title": "Lab report · Mar 2026",
+        "date": "2026-03-04",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Lab_Report_2026-05-25.pdf",
+        "title": "Lab report · May 2026",
+        "date": "2026-05-25",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-03-16.pdf",
+        "title": "Visit note · Mar 2025",
+        "date": "2025-03-16",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-07-02.pdf",
+        "title": "Visit note · Jul 2025 (Arabic)",
+        "date": "2025-07-02",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-09-14.pdf",
+        "title": "Visit note · Sep 2025",
+        "date": "2025-09-14",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-11-10.pdf",
+        "title": "Visit note · Nov 2025 (Arabic)",
+        "date": "2025-11-10",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2026-03-04.pdf",
+        "title": "Visit note · Mar 2026",
+        "date": "2026-03-04",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Visit_Note_2025-12-18.pdf",
+        "title": "Visit note · 2025-12 (Interim)",
+        "date": "2025-12-18",
+        "page_count": 2,
+        "is_scan": false
+      },
+      {
+        "file_name": "Nephrology_Note_2026-05-25.pdf",
+        "title": "Nephrology note · 2026-05",
+        "date": "2026-05-25",
+        "page_count": 1,
+        "is_scan": false
+      },
+      {
+        "file_name": "Scanned_Referral_Cover_Sheet.pdf",
+        "title": "Scanned archive · Referral Cover Sheet",
+        "date": "2024-04-12",
+        "page_count": 1,
+        "is_scan": true
+      },
+      {
+        "file_name": "Scanned_Prior_Fax_Header.pdf",
+        "title": "Scanned archive · Prior Clinic Fax Transmission",
+        "date": "2024-09-18",
+        "page_count": 1,
+        "is_scan": true
+      }
+    ]
+  }
+}

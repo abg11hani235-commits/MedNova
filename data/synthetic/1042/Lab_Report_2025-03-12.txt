@@ -1,0 +1,11 @@
+=== PAGE 1 ===
+AL-BORG CLINICAL LABORATORIES - ROUTINE DIABETES PANEL
+Patient: #1042 - Farouk Adel Mansour   Date: 12 Mar 2025
+Fasting Blood Glucose: 142 mg/dL (Reference: 70-99)
+Serum Creatinine: 1.05 mg/dL (Reference: 0.70-1.20)
+Estimated GFR: 78 mL/min/1.73m² (CKD-EPI 2021)
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 7.4% (Reference: <5.7%)
+Blood Urea Nitrogen: 16 mg/dL
+

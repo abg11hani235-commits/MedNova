@@ -1,0 +1,9 @@
+=== PAGE 1 ===
+CLINICAL LABORATORY REPORT
+Patient: #1051 - Mona Raafat El-Shazly   Date: 2026-05-25
+Fasting Blood Glucose: 184 mg/dL
+Estimated GFR: 44.0 mL/min/1.73m²
+
+=== PAGE 2 ===
+Glycated Hemoglobin (HbA1c): 9.2%
+

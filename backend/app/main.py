@@ -1,21 +1,21 @@
-"""FastAPI application entrypoint for Clinsight."""
-
 from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
+from .config import get_settings
+from .routes import router
 
-class HealthResponse(BaseModel):
-    status: str
-
-
-app = FastAPI(
-    title="Clinsight API",
-    description="Clinical decision-support service for diabetes clinicians",
-    version="0.1.0",
+app = FastAPI(title="Clinsight API", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in get_settings().cors_origins.split(",") if o.strip()],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
-@app.get("/health", response_model=HealthResponse, tags=["system"])
-async def health_check() -> HealthResponse:
-    """Return health status of the API service."""
-    return HealthResponse(status="ok")
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+app.include_router(router)

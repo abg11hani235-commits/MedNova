@@ -1,0 +1,1180 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Clinsight API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients": {
+      "get": {
+        "summary": "List Patients",
+        "operationId": "list_patients_patients_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PatientSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Patients Patients Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{pid}/brief": {
+      "get": {
+        "summary": "Get Brief",
+        "operationId": "get_brief_patients__pid__brief_get",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "x-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{pid}/sources/{chunk_id}": {
+      "get": {
+        "summary": "Get Source",
+        "operationId": "get_source_patients__pid__sources__chunk_id__get",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "chunk_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chunk Id"
+            }
+          },
+          {
+            "name": "x-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{pid}/suggested-questions": {
+      "get": {
+        "summary": "Get Suggested Questions",
+        "operationId": "get_suggested_questions_patients__pid__suggested_questions_get",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Suggested Questions Patients  Pid  Suggested Questions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{pid}/chat": {
+      "post": {
+        "summary": "Chat",
+        "operationId": "chat_patients__pid__chat_post",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "x-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatAnswer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/{insight_id}/review": {
+      "post": {
+        "summary": "Review",
+        "operationId": "review_insights__insight_id__review_post",
+        "parameters": [
+          {
+            "name": "insight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Insight Id"
+            }
+          },
+          {
+            "name": "x-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{pid}/files": {
+      "post": {
+        "summary": "Upload",
+        "operationId": "upload_patients__pid__files_post",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "x-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_patients__pid__files_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit": {
+      "get": {
+        "summary": "Get Audit",
+        "operationId": "get_audit_audit_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Get Audit Audit Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuditEntry": {
+        "properties": {
+          "time": {
+            "type": "string",
+            "title": "Time"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "patient_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time",
+          "actor",
+          "action"
+        ],
+        "title": "AuditEntry"
+      },
+      "Body_upload_patients__pid__files_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_patients__pid__files_post"
+      },
+      "Brief": {
+        "properties": {
+          "patient": {
+            "$ref": "#/components/schemas/PatientInfo"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/Coverage"
+          },
+          "snapshot": {
+            "items": {
+              "$ref": "#/components/schemas/Insight"
+            },
+            "type": "array",
+            "title": "Snapshot"
+          },
+          "trends": {
+            "$ref": "#/components/schemas/Trends"
+          },
+          "care_gaps": {
+            "items": {
+              "$ref": "#/components/schemas/CareGap"
+            },
+            "type": "array",
+            "title": "Care Gaps"
+          },
+          "considerations": {
+            "items": {
+              "$ref": "#/components/schemas/Consideration"
+            },
+            "type": "array",
+            "title": "Considerations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient",
+          "coverage",
+          "snapshot",
+          "trends",
+          "care_gaps",
+          "considerations"
+        ],
+        "title": "Brief"
+      },
+      "CareGap": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "overdue",
+              "missing"
+            ],
+            "title": "Status"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "detail"
+        ],
+        "title": "CareGap"
+      },
+      "ChatAnswer": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "answerable": {
+            "type": "boolean",
+            "title": "Answerable"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "answerable"
+        ],
+        "title": "ChatAnswer"
+      },
+      "ChatRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "ChatRequest"
+      },
+      "Consideration": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "review",
+              "urgent_review"
+            ],
+            "title": "Severity"
+          },
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "severity",
+          "statement",
+          "why"
+        ],
+        "title": "Consideration"
+      },
+      "Coverage": {
+        "properties": {
+          "total_files": {
+            "type": "integer",
+            "title": "Total Files"
+          },
+          "readable_files": {
+            "type": "integer",
+            "title": "Readable Files"
+          },
+          "unreadable_files": {
+            "type": "integer",
+            "title": "Unreadable Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_files",
+          "readable_files",
+          "unreadable_files"
+        ],
+        "title": "Coverage"
+      },
+      "FileCounts": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "readable": {
+            "type": "integer",
+            "title": "Readable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "readable"
+        ],
+        "title": "FileCounts"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Highlight": {
+        "properties": {
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "Highlight"
+      },
+      "Insight": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "review",
+              "urgent_review"
+            ],
+            "title": "Severity"
+          },
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "absence_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absence Note"
+          },
+          "review_state": {
+            "type": "string",
+            "enum": [
+              "none",
+              "reviewed"
+            ],
+            "title": "Review State",
+            "default": "none"
+          },
+          "feedback": {
+            "type": "string",
+            "enum": [
+              "none",
+              "helpful",
+              "not_helpful"
+            ],
+            "title": "Feedback",
+            "default": "none"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "severity",
+          "statement"
+        ],
+        "title": "Insight"
+      },
+      "OpenItems": {
+        "properties": {
+          "urgent": {
+            "type": "integer",
+            "title": "Urgent"
+          },
+          "review": {
+            "type": "integer",
+            "title": "Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urgent",
+          "review"
+        ],
+        "title": "OpenItems"
+      },
+      "PatientInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "diabetes_type": {
+            "type": "string",
+            "title": "Diabetes Type"
+          },
+          "duration_years": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Years"
+          },
+          "medications": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Medications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "age",
+          "diabetes_type",
+          "medications"
+        ],
+        "title": "PatientInfo"
+      },
+      "PatientSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "diabetes_type": {
+            "type": "string",
+            "title": "Diabetes Type"
+          },
+          "last_visit": {
+            "type": "string",
+            "title": "Last Visit"
+          },
+          "next_visit": {
+            "type": "string",
+            "title": "Next Visit"
+          },
+          "open_items": {
+            "$ref": "#/components/schemas/OpenItems"
+          },
+          "files": {
+            "$ref": "#/components/schemas/FileCounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "age",
+          "diabetes_type",
+          "last_visit",
+          "next_visit",
+          "open_items",
+          "files"
+        ],
+        "title": "PatientSummary"
+      },
+      "ReviewRequest": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "reviewed",
+              "helpful",
+              "not_helpful"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ReviewRequest"
+      },
+      "ReviewResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "review_state": {
+            "type": "string",
+            "enum": [
+              "none",
+              "reviewed"
+            ],
+            "title": "Review State"
+          },
+          "feedback": {
+            "type": "string",
+            "enum": [
+              "none",
+              "helpful",
+              "not_helpful"
+            ],
+            "title": "Feedback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "review_state",
+          "feedback"
+        ],
+        "title": "ReviewResult"
+      },
+      "Source": {
+        "properties": {
+          "chunk_id": {
+            "type": "string",
+            "title": "Chunk Id"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chunk_id",
+          "file_name",
+          "page",
+          "quote"
+        ],
+        "title": "Source"
+      },
+      "SourcePage": {
+        "properties": {
+          "chunk_id": {
+            "type": "string",
+            "title": "Chunk Id"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "page_text": {
+            "type": "string",
+            "title": "Page Text"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          },
+          "highlight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Highlight"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "chunk_id",
+          "file_name",
+          "page",
+          "page_text",
+          "quote"
+        ],
+        "title": "SourcePage"
+      },
+      "Target": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "Target"
+      },
+      "Trend": {
+        "properties": {
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "points"
+        ],
+        "title": "Trend"
+      },
+      "TrendPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "label",
+          "value"
+        ],
+        "title": "TrendPoint"
+      },
+      "Trends": {
+        "properties": {
+          "hba1c": {
+            "$ref": "#/components/schemas/Trend"
+          },
+          "egfr": {
+            "$ref": "#/components/schemas/Trend"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hba1c",
+          "egfr"
+        ],
+        "title": "Trends"
+      },
+      "UploadResult": {
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "title": "File Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "queued",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_id",
+          "status"
+        ],
+        "title": "UploadResult"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

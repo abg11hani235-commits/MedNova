@@ -70,7 +70,9 @@ def test_review_actions(client):
 
 
 def test_upload_is_queued_and_stored(client):
-    r = client.post("/patients/9001/files", files={"file": ("labs.pdf", b"%PDF-1.4 fake", "application/pdf")})
+    r = client.post(
+        "/patients/9001/files", files={"file": ("labs.pdf", b"%PDF-1.4 fake", "application/pdf")}
+    )
     assert r.status_code == 200 and r.json()["status"] == "queued"
     stored = list((get_settings().storage_dir / "uploads" / "9001").glob("*labs.pdf"))
     assert len(stored) == 1
@@ -94,3 +96,12 @@ def test_refusal_text_matches_dataset_constant():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert mod.REFUSAL_TEXT == REFUSAL_TEXT
+
+
+def test_clean_note_hides_internal_term():
+    from app.services import _clean_note
+
+    raw = "No record in 14 readable files within 12 months of as_of_date (2026-06-18)"
+    assert _clean_note(raw) == "No record in 14 readable files in the 12 months before 18 Jun 2026"
+    assert _clean_note(None) is None
+    assert _clean_note("Last recorded 2023") == "Last recorded 2023"

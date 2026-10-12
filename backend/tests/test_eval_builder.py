@@ -62,3 +62,25 @@ def test_validator_fails_on_missing_gold_chunks(tmp_path):
     }
     bad_file.write_text(json.dumps(bad_q) + "\n", encoding="utf-8")
     assert validate_questions(bad_file) is False
+
+
+def test_stratified_sampling():
+    import json
+
+    from eval.run_eval import stratified_sample
+
+    questions = []
+    with open(QUESTIONS_FILE, encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                questions.append(json.loads(line))
+
+    sample20 = stratified_sample(questions, n=20, seed=42)
+    assert len(sample20) == 20
+    # Stratified guarantee: all 15 question types represented
+    sampled_types = {q["type"] for q in sample20}
+    all_types = {q["type"] for q in questions}
+    assert sampled_types == all_types
+    # Proportional patient distribution across all 10 patients
+    sampled_pids = {q["patient_id"] for q in sample20}
+    assert len(sampled_pids) == 10

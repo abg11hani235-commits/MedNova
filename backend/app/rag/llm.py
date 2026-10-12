@@ -18,9 +18,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from app.config import ROOT, get_settings
 from openai import APIConnectionError, APIStatusError, OpenAI, RateLimitError
 from pydantic import BaseModel, Field, ValidationError
+
+from app.config import ROOT, get_settings
 
 
 class ClaimModel(BaseModel):
@@ -39,13 +40,21 @@ CACHE_DIR = ROOT / "eval" / ".cache"
 _last_call_timestamp: float = 0.0
 
 
+_printed_first_call_info = False
+
+
 def check_credentials() -> tuple[bool, str]:
-    """Check if GROQ_API_KEY and LLM_MODEL are configured."""
+    """Check if LLM_API_KEY (or GROQ_API_KEY), LLM_MODEL, and LLM_BASE_URL are configured."""
     settings = get_settings()
-    if not settings.groq_api_key or not settings.groq_api_key.strip():
-        return False, "GROQ_API_KEY is empty. Please set it in .env to run live LLM calls."
+    missing = []
+    if not settings.effective_api_key:
+        missing.append("Neither LLM_API_KEY nor GROQ_API_KEY is set in .env")
     if not settings.llm_model or not settings.llm_model.strip():
-        return False, "LLM_MODEL is empty. Please set it in .env to run live LLM calls."
+        missing.append("LLM_MODEL is not set in .env")
+    if not settings.llm_base_url or not settings.llm_base_url.strip():
+        missing.append("LLM_BASE_URL is not set in .env")
+    if missing:
+        return False, "; ".join(missing)
     return True, ""
 
 
@@ -81,9 +90,16 @@ class GroqLLMClient:
             if not ok:
                 print(f"[FATAL] {msg}", file=sys.stderr)
                 sys.exit(1)
+            default_headers: dict[str, str] = {}
+            if self.settings.llm_http_referer:
+                default_headers["HTTP-Referer"] = self.settings.llm_http_referer
+            if self.settings.llm_title:
+                default_headers["X-Title"] = self.settings.llm_title
+
             self.client = OpenAI(
-                api_key=self.settings.groq_api_key,
+                api_key=self.settings.effective_api_key,
                 base_url=self.settings.llm_base_url,
+                default_headers=default_headers or None,
             )
         return self.client
 
@@ -98,6 +114,7 @@ class GroqLLMClient:
 
         Returns: (parsed_json_dict, usage_dict, latency_ms)
         """
+        global _printed_first_call_info
         chosen_model = model or self.settings.llm_model
         params = {"temperature": temperature, "model": chosen_model}
         cache_key = {"model": chosen_model, "messages": messages, "params": params}
@@ -115,10 +132,30 @@ class GroqLLMClient:
             except Exception:
                 pass
 
+        if not _printed_first_call_info:
+            from urllib.parse import urlparse
+
+            host = urlparse(self.settings.llm_base_url).netloc or self.settings.llm_base_url
+            print(f"[LLM Info] Host: {host} | Model: {chosen_model}")
+            if chosen_model.endswith(":free"):
+                print(
+                    "[LLM Warning] Free endpoints (:free) may have strict daily request limits and "
+                    "weaker data policies. Only synthetic, de-identified dataset may be used."
+                )
+            mode_desc = (
+                "structured mode (json_object response_format)"
+                if self.settings.llm_structured_output
+                else "plain JSON instructions + Pydantic validation"
+            )
+            print(f"[LLM Info] Output Mode: {mode_desc}")
+            _printed_first_call_info = True
+
         client = self._get_client()
         rpm = self.settings.llm_requests_per_minute
+        if chosen_model.endswith(":free") and rpm > 10:
+            rpm = 10
 
-        max_retries = 5
+        max_retries = 3
         base_delay = 2.0
         response_json = None
         usage = {"prompt_tokens": 0, "completion_tokens": 0}
@@ -127,23 +164,44 @@ class GroqLLMClient:
         for attempt in range(max_retries):
             _throttle(rpm)
             try:
-                res = client.chat.completions.create(
-                    model=chosen_model,
-                    messages=messages,
-                    temperature=temperature,
-                    response_format={"type": "json_object"},
-                )
+                kwargs: dict[str, Any] = {
+                    "model": chosen_model,
+                    "messages": messages,
+                    "temperature": temperature,
+                }
+                if self.settings.llm_structured_output:
+                    kwargs["response_format"] = {"type": "json_object"}
 
-                content = res.choices[0].message.content or "{}"
-                if res.usage:
+                res = client.chat.completions.create(**kwargs)
+
+                content = ""
+                if res.choices and res.choices[0].message and res.choices[0].message.content:
+                    content = res.choices[0].message.content
+                else:
+                    print("[WARN] Received empty or null message content from LLM", file=sys.stderr)
+
+                if res.usage is not None:
                     usage = {
-                        "prompt_tokens": res.usage.prompt_tokens,
-                        "completion_tokens": res.usage.completion_tokens,
+                        "prompt_tokens": getattr(res.usage, "prompt_tokens", 0) or 0,
+                        "completion_tokens": getattr(res.usage, "completion_tokens", 0) or 0,
                     }
+                else:
+                    print("[WARN] LLM response missing usage field", file=sys.stderr)
+                    usage = {"prompt_tokens": 0, "completion_tokens": 0}
 
                 # Validate with Pydantic
                 try:
-                    parsed = json.loads(content)
+                    # Strip any potential markdown fences in plain mode
+                    cleaned_content = content.strip()
+                    if cleaned_content.startswith("```"):
+                        lines = cleaned_content.splitlines()
+                        if lines[0].startswith("```"):
+                            lines = lines[1:]
+                        if lines and lines[-1].startswith("```"):
+                            lines = lines[:-1]
+                        cleaned_content = "\n".join(lines).strip()
+
+                    parsed = json.loads(cleaned_content) if cleaned_content else {}
                     validated = RAGResponseModel.model_validate(parsed)
                     response_json = validated.model_dump()
                     break
@@ -173,17 +231,30 @@ class GroqLLMClient:
                         break
 
             except RateLimitError as e:
-                retry_after = getattr(e, "response", None)
-                wait_time = base_delay * (2**attempt)
-                if retry_after and hasattr(retry_after, "headers"):
-                    h = retry_after.headers.get("retry-after")
-                    if h and h.isdigit():
-                        wait_time = float(h)
+                headers = {}
+                retry_after_val = None
+                res_obj = getattr(e, "response", None)
+                if res_obj is not None and hasattr(res_obj, "headers"):
+                    raw_headers = dict(res_obj.headers)
+                    headers = {
+                        k: v
+                        for k, v in raw_headers.items()
+                        if any(term in k.lower() for term in ["rate", "limit", "retry"])
+                        and not any(
+                            secret in k.lower()
+                            for secret in ["key", "auth", "token", "secret", "cookie", "set-cookie"]
+                        )
+                    }
+                    retry_after_val = raw_headers.get("retry-after")
                 print(
-                    f"[WARN] 429 Rate limit encountered. Backing off for {wait_time:.1f}s...",
+                    "[ERROR] 429 Rate limit encountered on LLM call. "
+                    "Stopping execution immediately.",
                     file=sys.stderr,
                 )
-                time.sleep(wait_time)
+                print(f"[ERROR] Rate-limit headers: {headers}", file=sys.stderr)
+                if retry_after_val:
+                    print(f"[ERROR] Retry-After header: {retry_after_val}", file=sys.stderr)
+                raise
             except APIStatusError as e:
                 if e.status_code >= 500:
                     wait_time = base_delay * (2**attempt)

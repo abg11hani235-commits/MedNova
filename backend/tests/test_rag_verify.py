@@ -124,3 +124,15 @@ def test_wrong_number_in_claim():
     )
     assert res["answerable"] is False
     assert res["answer"] == REFUSAL_TEXT
+
+
+def test_check_credentials_logic(monkeypatch):
+    from app.config import get_settings
+    from app.rag.llm import check_credentials
+
+    s = get_settings()
+    monkeypatch.setattr(s, "llm_api_key", "")
+    monkeypatch.setattr(s, "groq_api_key", "")
+    ok, msg = check_credentials()
+    assert not ok
+    assert "Neither LLM_API_KEY nor GROQ_API_KEY" in msg

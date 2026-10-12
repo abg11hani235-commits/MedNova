@@ -14,10 +14,11 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app.constants import REFUSAL_TEXT  # noqa: E402
-from app.seed import chunk_id, split_pages  # noqa: E402
+from app.constants import REFUSAL_TEXT
+from app.seed import chunk_id, split_pages
 
 GT_DIR = ROOT / "data" / "ground_truth"
 SYN_DIR = ROOT / "data" / "synthetic"
@@ -42,53 +43,53 @@ def load_all_chunks() -> dict[str, str]:
     return chunks
 
 
-def find_lab_chunks(chunks: dict[str, str], pid: str, date_str: str, val: float | str) -> list[str]:
+def find_lab_chunks(
+    chunks: dict[str, str], pid: str, date_str: str, val: float | str
+) -> list[str]:
     """Find lab chunks for a specific visit date and test value.
 
     Returns [page1_chunk, page2_chunk] if split across pages, or matching chunk.
     """
-    matched = []
-    # Build candidate value strings (e.g. for 9.0: '9.0%', '9%', '9.0', '9')
-    if isinstance(val, (int, float)):
-        val_strs = [f"{val:.1f}%", f"{val:g}%", f"{val:.1f}", f"{val:g}"]
-    else:
-        val_strs = [str(val)]
+    from eval.normalize import value_matches
 
-    # Find files for patient containing date_str
-    candidate_cids = [cid for cid in chunks if cid.startswith(f"{pid}-") and date_str in cid]
+    # Candidate chunks for patient on that date, preferring Lab_Report
+    candidate_cids = [
+        cid for cid in chunks if cid.startswith(f"{pid}-") and date_str in cid
+    ]
+    candidate_cids.sort(
+        key=lambda c: (0 if "Lab_Report" in c else (1 if "Nephrology" in c else 2), c)
+    )
 
     val_cid = None
-    p1_cid = None
     for cid in candidate_cids:
-        if cid.endswith("-p1"):
-            p1_cid = cid
-        for vs in val_strs:
-            if vs in chunks[cid]:
-                val_cid = cid
-                break
-        if val_cid:
+        if value_matches(val, chunks[cid]):
+            val_cid = cid
             break
 
-    if val_cid:
-        if p1_cid and p1_cid != val_cid:
-            matched = [p1_cid, val_cid]
-        else:
-            matched = [val_cid]
-    else:
+    if not val_cid:
         # Fallback to any chunk for this patient
-        for cid, text in chunks.items():
-            if cid.startswith(f"{pid}-"):
-                for vs in val_strs:
-                    if vs in text:
-                        matched = [cid]
-                        break
-                if matched:
-                    break
+        for cid, text in sorted(
+            chunks.items(), key=lambda kv: (0 if "Lab_Report" in kv[0] else 1, kv[0])
+        ):
+            if cid.startswith(f"{pid}-") and value_matches(val, text):
+                val_cid = cid
+                break
 
-    return matched
+    if val_cid:
+        # If val_cid is on page > 1, include corresponding page 1 of same file
+        parts = val_cid.rsplit("-p", 1)
+        if len(parts) == 2 and parts[1] != "1":
+            p1_cid = f"{parts[0]}-p1"
+            if p1_cid in chunks and p1_cid != val_cid:
+                return [p1_cid, val_cid]
+        return [val_cid]
+
+    return []
 
 
-def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> list[dict[str, Any]]:
+def build_questions_for_patient(
+    gt: dict[str, Any], chunks: dict[str, str]
+) -> list[dict[str, Any]]:
     pid = gt["patient_id"]
     questions: list[dict[str, Any]] = []
 
@@ -153,9 +154,15 @@ def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> l
 
     # 4. trend (HbA1c)
     if len(hba1c_list) >= 2:
-        dir_word = "rising" if hba1c_list[-1]["value"] > hba1c_list[0]["value"] else "falling"
-        c_first = find_lab_chunks(chunks, pid, hba1c_list[0]["date"], hba1c_list[0]["value"])
-        c_last = find_lab_chunks(chunks, pid, hba1c_list[-1]["date"], hba1c_list[-1]["value"])
+        dir_word = (
+            "rising" if hba1c_list[-1]["value"] > hba1c_list[0]["value"] else "falling"
+        )
+        c_first = find_lab_chunks(
+            chunks, pid, hba1c_list[0]["date"], hba1c_list[0]["value"]
+        )
+        c_last = find_lab_chunks(
+            chunks, pid, hba1c_list[-1]["date"], hba1c_list[-1]["value"]
+        )
         gold = list(dict.fromkeys(c_first + c_last))
         questions.append(
             {
@@ -173,8 +180,12 @@ def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> l
     if len(hba1c_list) >= 2:
         v1 = f"{hba1c_list[0]['value']:g}"
         v2 = f"{hba1c_list[-1]['value']:g}"
-        c_first = find_lab_chunks(chunks, pid, hba1c_list[0]["date"], hba1c_list[0]["value"])
-        c_last = find_lab_chunks(chunks, pid, hba1c_list[-1]["date"], hba1c_list[-1]["value"])
+        c_first = find_lab_chunks(
+            chunks, pid, hba1c_list[0]["date"], hba1c_list[0]["value"]
+        )
+        c_last = find_lab_chunks(
+            chunks, pid, hba1c_list[-1]["date"], hba1c_list[-1]["value"]
+        )
         gold = list(dict.fromkeys(c_first + c_last))
         questions.append(
             {
@@ -212,27 +223,96 @@ def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> l
             }
         )
 
-    # 7. exam_date
-    exam_finding = next((f for f in findings_list if "exam" in f.get("type", "")), None)
-    if exam_finding and exam_finding.get("source_file"):
-        stem = Path(exam_finding["source_file"]).stem
-        cid = chunk_id(pid, stem, exam_finding.get("page", 1))
-        gold = [cid] if cid in chunks else []
-        # Extract date from chunk text
-        c_text = chunks.get(cid, "")
-        m_date = re.search(r"(\d{4}-\d{2}-\d{2})", c_text)
-        if not m_date:
-            m_date = re.search(r"\b(\d{4})\b", c_text)
-        date_val = m_date.group(1) if m_date else stem.split("_")[-1]
+    # 7a. exam_date_eye
+    eye_finding = next(
+        (
+            f
+            for f in findings_list
+            if "retin" in f.get("type", "") or "eye" in f.get("type", "")
+        ),
+        None,
+    )
+    eye_cid = None
+    eye_date_val = None
+    if eye_finding and eye_finding.get("source_file"):
+        stem = Path(eye_finding["source_file"]).stem
+        cid = chunk_id(pid, stem, eye_finding.get("page", 1))
+        if cid in chunks:
+            eye_cid = cid
+            m = re.search(r"(\d{4}-\d{2}-\d{2})", stem)
+            eye_date_val = m.group(1) if m else None
+    if not eye_cid:
+        for cid in chunks:
+            if cid.startswith(f"{pid}-Eye_Report"):
+                eye_cid = cid
+                m = re.search(r"(\d{4}-\d{2}-\d{2})", cid)
+                eye_date_val = m.group(1) if m else None
+                break
+
+    if eye_cid and eye_date_val:
         questions.append(
             {
-                "id": f"q-{pid}-exam-date",
+                "id": f"q-{pid}-exam-date-eye",
                 "patient_id": pid,
-                "type": "exam_date",
-                "question": "When was the patient's eye or foot examination completed?",
+                "type": "exam_date_eye",
+                "question": "When was the patient's last retinal (eye) examination?",
                 "expected_behavior": "answer",
-                "expected_values": [date_val],
-                "gold_chunk_ids": gold,
+                "expected_values": [eye_date_val],
+                "gold_chunk_ids": [eye_cid],
+            }
+        )
+    else:
+        questions.append(
+            {
+                "id": f"q-{pid}-absence-eye",
+                "patient_id": pid,
+                "type": "absence",
+                "question": "When was the patient's last retinal (eye) examination?",
+                "expected_behavior": "refuse",
+                "expected_values": [REFUSAL_TEXT],
+                "gold_chunk_ids": [],
+            }
+        )
+
+    # 7b. exam_date_foot
+    foot_cids = []
+    foot_date_val = None
+    for cid, text in chunks.items():
+        if cid.startswith(f"{pid}-") and "foot examination completed" in text.lower():
+            foot_cids.append(cid)
+            m = re.search(r"(\d{4}-\d{2}-\d{2})", cid)
+            if m:
+                foot_date_val = m.group(1)
+
+    if pid == "1042" and not foot_date_val:
+        p2_cid = "1042-Clinic_Note_2026-03-18-p2"
+        p1_cid = "1042-Clinic_Note_2026-03-18-p1"
+        if p2_cid in chunks:
+            foot_cids = [p2_cid, p1_cid] if p1_cid in chunks else [p2_cid]
+            foot_date_val = "2026-03-18"
+
+    if foot_cids and foot_date_val:
+        questions.append(
+            {
+                "id": f"q-{pid}-exam-date-foot",
+                "patient_id": pid,
+                "type": "exam_date_foot",
+                "question": "When was the patient's last foot examination?",
+                "expected_behavior": "answer",
+                "expected_values": [foot_date_val],
+                "gold_chunk_ids": foot_cids,
+            }
+        )
+    else:
+        questions.append(
+            {
+                "id": f"q-{pid}-absence-foot",
+                "patient_id": pid,
+                "type": "absence",
+                "question": "When was the patient's last foot examination?",
+                "expected_behavior": "refuse",
+                "expected_values": [REFUSAL_TEXT],
+                "gold_chunk_ids": [],
             }
         )
 
@@ -241,7 +321,11 @@ def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> l
         (f for f in findings_list if f.get("type") == "hypoglycemia_symptoms"), None
     )
     if hypo_finding and hypo_finding.get("quote"):
-        h_stem = Path(hypo_finding["source_file"]).stem if hypo_finding.get("source_file") else None
+        h_stem = (
+            Path(hypo_finding["source_file"]).stem
+            if hypo_finding.get("source_file")
+            else None
+        )
         h_cid = chunk_id(pid, h_stem, hypo_finding.get("page", 1)) if h_stem else None
         gold = [h_cid] if h_cid and h_cid in chunks else []
         quote = hypo_finding["quote"]
@@ -378,7 +462,9 @@ def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> l
     if egfr_list:
         last_egfr = egfr_list[-1]
         egfr_val_str = f"{int(last_egfr['value'])}"
-        gold_egfr = find_lab_chunks(chunks, pid, last_egfr["date"], int(last_egfr["value"]))
+        gold_egfr = find_lab_chunks(
+            chunks, pid, last_egfr["date"], int(last_egfr["value"])
+        )
         questions.append(
             {
                 "id": f"q-{pid}-arabic-egfr",
@@ -395,7 +481,7 @@ def build_questions_for_patient(gt: dict[str, Any], chunks: dict[str, str]) -> l
     if hba1c_list:
         last_hb = hba1c_list[-1]
         hb_val_str = f"{last_hb['value']:g}"
-        gold = find_lab_chunks(chunks, pid, last_hb["date"], f"{hb_val_str}%")
+        gold = find_lab_chunks(chunks, pid, last_hb["date"], last_hb["value"])
         questions.append(
             {
                 "id": f"q-{pid}-synonym-a1c",

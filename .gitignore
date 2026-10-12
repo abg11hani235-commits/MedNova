@@ -85,3 +85,6 @@ Thumbs.db
 data/synthetic/**/*.pdf
 !data/synthetic/1042/*.pdf
 
+# Eval cache and results
+eval/.cache/
+eval/results/

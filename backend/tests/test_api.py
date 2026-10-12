@@ -1,6 +1,7 @@
 import importlib.util
 
 import pytest
+
 from app.config import ROOT, get_settings
 from app.constants import REFUSAL_TEXT
 
@@ -115,3 +116,14 @@ def test_clean_detail():
 
 def test_suggested_questions_unknown_patient(client):
     assert client.get("/patients/9999/suggested-questions").status_code == 404
+
+
+def test_settings_api_key_fallback():
+    from app.config import Settings
+
+    s = Settings(llm_api_key="primary", groq_api_key="secondary")
+    assert s.effective_api_key == "primary"
+    s2 = Settings(llm_api_key="", groq_api_key="secondary")
+    assert s2.effective_api_key == "secondary"
+    s3 = Settings(llm_api_key="", groq_api_key="")
+    assert s3.effective_api_key == ""

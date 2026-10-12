@@ -11,15 +11,27 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql://postgres:postgres@localhost:5433/clinsight"
     groq_api_key: str = ""
+    llm_api_key: str = ""
     llm_model: str = ""
-    llm_base_url: str = "https://api.groq.com/openai/v1"
+    llm_base_url: str = "https://openrouter.ai/api/v1"
+    llm_structured_output: bool = False
+    llm_http_referer: str = ""
+    llm_title: str = ""
     embedding_model: str = "BAAI/bge-m3"
     embedding_dim: int = 1024
-    llm_requests_per_minute: int = 30
+    llm_requests_per_minute: int = 10
     storage_path: str = "storage"
     cors_origins: str = "http://localhost:3000"
     max_upload_mb: int = 25
     data_dir: str = "data"
+
+    @property
+    def effective_api_key(self) -> str:
+        return (
+            self.llm_api_key.strip()
+            if self.llm_api_key and self.llm_api_key.strip()
+            else self.groq_api_key.strip()
+        )
 
     @property
     def sqlalchemy_url(self) -> str:

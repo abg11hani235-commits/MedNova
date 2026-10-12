@@ -91,9 +91,32 @@ def test_bm25_patient_isolation():
 def test_bm25_tokenization():
     tokens = bm25_tokenize("Estimated GFR: 59 mL/min/1.73m² with HbA1c 8.9% on 2026-06-18")
     assert "59" in tokens
-    assert "8.9%" in tokens
+    assert "8.9" in tokens
     assert "2026-06-18" in tokens
     assert "ml/min/1.73m²" in tokens
+
+
+def test_bm25_tokenization_real_clinical_strings():
+    """Verify BM25 tokenization on real clinic lines, bracket splitting, and Arabic."""
+    # Line 1: Glycated Hemoglobin (HbA1c): 8.9%
+    tokens1 = bm25_tokenize("Glycated Hemoglobin (HbA1c): 8.9%")
+    assert tokens1 == ["glycated", "hemoglobin", "hba1c", "8.9"]
+    assert "hba1c" in bm25_tokenize("(HbA1c):")
+
+    # Line 2: Estimated GFR today is 59 mL/min/1.73m².
+    tokens2 = bm25_tokenize("Estimated GFR today is 59 mL/min/1.73m².")
+    assert tokens2 == ["estimated", "gfr", "today", "is", "59", "ml/min/1.73m²"]
+    assert "ml/min/1.73m²" in tokens2
+    assert not any(t.endswith(".") for t in tokens2)
+
+    # Arabic normalization still works
+    ar_tokens = bm25_tokenize("فحص السكر التراكمي (HbA1c): 8.9% بتاريخ 2026-06-18")
+    assert "فحص" in ar_tokens
+    assert "السكر" in ar_tokens
+    assert "التراكمي" in ar_tokens
+    assert "hba1c" in ar_tokens
+    assert "8.9" in ar_tokens
+    assert "2026-06-18" in ar_tokens
 
 
 def test_pipeline_dry_run_and_execution():

@@ -51,10 +51,26 @@ Use cautious phrasing like "worth reviewing".
 """
 
 
+BM25_TOKEN_PATTERN = re.compile(
+    # compound clinical units with slash: ml/min/1.73m², mg/dl
+    r"[a-z\u0600-\u06ff]+(?:/[a-z0-9\.\²\³]+)+"
+    r"|\d{4}-\d{2}-\d{2}"  # dates: 2026-06-18
+    r"|\d+(?:\.\d+)+"  # decimals: 8.9, 1.73
+    r"|[\w²³]+",  # words and integers: hba1c, 59, glycated, arabic words
+    re.IGNORECASE,
+)
+
+
 def bm25_tokenize(text: str) -> list[str]:
-    """Tokenize text preserving medical units, decimals, dates, and Arabic normalization."""
+    """Tokenize text splitting on punctuation/brackets while preserving decimals, units, Arabic."""
     norm = normalize_arabic(text).lower()
-    return re.findall(r"[\w\.\/\%\-]+", norm)
+    raw_tokens = BM25_TOKEN_PATTERN.findall(norm)
+    tokens: list[str] = []
+    for t in raw_tokens:
+        clean = t.rstrip(".,:;!?%()[]{}")
+        if clean:
+            tokens.append(clean)
+    return tokens
 
 
 def reciprocal_rank_fusion(ranked_lists: list[list[str]], k: int = 60) -> list[tuple[str, float]]:

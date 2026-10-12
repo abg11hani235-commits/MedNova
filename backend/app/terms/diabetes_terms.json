@@ -1,0 +1,428 @@
+{
+  "concepts": [
+    {
+      "id": "hba1c",
+      "canonical_name": "Glycated Hemoglobin (HbA1c)",
+      "class": "lab",
+      "code": "",
+      "expected_units": "%",
+      "synonyms": [
+        "HbA1c",
+        "A1c",
+        "glycated hemoglobin",
+        "glycohemoglobin",
+        "hemoglobin a1c",
+        "A1C test",
+        "glycated hb"
+      ],
+      "arabic_synonyms": [
+        {"term": "السكر التراكمي", "needs_review": true},
+        {"term": "الهيموجلوبين السكري", "needs_review": true},
+        {"term": "تراكمي السكر", "needs_review": true},
+        {"term": "تحليل السكر التراكمي", "needs_review": true}
+      ]
+    },
+    {
+      "id": "egfr",
+      "canonical_name": "Estimated Glomerular Filtration Rate (eGFR)",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mL/min/1.73m²",
+      "synonyms": [
+        "eGFR",
+        "estimated GFR",
+        "GFR",
+        "glomerular filtration rate",
+        "kidney function",
+        "renal function",
+        "kidney function number",
+        "estimated glomerular filtration rate"
+      ],
+      "arabic_synonyms": [
+        {"term": "معدل الترشيح الكبيبي", "needs_review": true},
+        {"term": "وظائف الكلى", "needs_review": true},
+        {"term": "كفاءة الكلى", "needs_review": true},
+        {"term": "معدل الفلترة الكبيبية", "needs_review": true}
+      ]
+    },
+    {
+      "id": "creatinine",
+      "canonical_name": "Serum Creatinine",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/dL",
+      "synonyms": [
+        "Serum Creatinine",
+        "creatinine",
+        "serum Cr",
+        "SCr",
+        "Cr"
+      ],
+      "arabic_synonyms": [
+        {"term": "الكرياتينين", "needs_review": true},
+        {"term": "كرياتينين مصل الدم", "needs_review": true},
+        {"term": "الكرياتنين", "needs_review": true}
+      ]
+    },
+    {
+      "id": "uacr",
+      "canonical_name": "Urine Albumin-to-Creatinine Ratio (UACR)",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/g",
+      "synonyms": [
+        "UACR",
+        "ACR",
+        "urine albumin-creatinine ratio",
+        "urine microalbumin",
+        "microalbuminuria",
+        "urine albumin",
+        "ACR in urine",
+        "microalbumin/creatinine ratio"
+      ],
+      "arabic_synonyms": [
+        {"term": "نسبة الزلال إلى الكرياتينين", "needs_review": true},
+        {"term": "زلال البول", "needs_review": true},
+        {"term": "الزلال البولي", "needs_review": true}
+      ]
+    },
+    {
+      "id": "total_cholesterol",
+      "canonical_name": "Total Cholesterol",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/dL",
+      "synonyms": [
+        "Total Cholesterol",
+        "cholesterol total",
+        "total chol",
+        "TC"
+      ],
+      "arabic_synonyms": [
+        {"term": "الكوليسترول الكلي", "needs_review": true},
+        {"term": "الكولسترول الكلي", "needs_review": true}
+      ]
+    },
+    {
+      "id": "ldl",
+      "canonical_name": "LDL Cholesterol",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/dL",
+      "synonyms": [
+        "LDL Cholesterol",
+        "LDL",
+        "LDL-C",
+        "low-density lipoprotein",
+        "bad cholesterol"
+      ],
+      "arabic_synonyms": [
+        {"term": "الكوليسترول الضار", "needs_review": true},
+        {"term": "الكولسترول منخفض الكثافة", "needs_review": true}
+      ]
+    },
+    {
+      "id": "hdl",
+      "canonical_name": "HDL Cholesterol",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/dL",
+      "synonyms": [
+        "HDL Cholesterol",
+        "HDL",
+        "HDL-C",
+        "high-density lipoprotein",
+        "good cholesterol"
+      ],
+      "arabic_synonyms": [
+        {"term": "الكوليسترول النافع", "needs_review": true},
+        {"term": "الكولسترول عالي الكثافة", "needs_review": true}
+      ]
+    },
+    {
+      "id": "triglycerides",
+      "canonical_name": "Triglycerides",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/dL",
+      "synonyms": [
+        "Triglycerides",
+        "TG",
+        "triglyceride",
+        "trigs"
+      ],
+      "arabic_synonyms": [
+        {"term": "الدهون الثلاثية", "needs_review": true},
+        {"term": "شحوم الدم الثلاثية", "needs_review": true}
+      ]
+    },
+    {
+      "id": "fasting_glucose",
+      "canonical_name": "Fasting Blood Glucose",
+      "class": "lab",
+      "code": "",
+      "expected_units": "mg/dL",
+      "synonyms": [
+        "Fasting Blood Glucose",
+        "fasting glucose",
+        "FBG",
+        "fasting blood sugar",
+        "FBS"
+      ],
+      "arabic_synonyms": [
+        {"term": "سكر الدم الصائم", "needs_review": true},
+        {"term": "السكر الصائم", "needs_review": true}
+      ]
+    },
+    {
+      "id": "hypoglycemia_symptoms",
+      "canonical_name": "Hypoglycemia Symptoms",
+      "class": "symptom",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "hypoglycemia",
+        "hypoglycemic symptoms",
+        "low glucose symptoms",
+        "night-time sweating",
+        "nocturnal hypoglycemia",
+        "lightheadedness",
+        "cold sweats",
+        "sweating and lightheadedness"
+      ],
+      "arabic_synonyms": [
+        {"term": "أعراض هبوط السكر", "needs_review": true},
+        {"term": "انخفاض السكر", "needs_review": true},
+        {"term": "التعرق الليلي", "needs_review": true},
+        {"term": "هبوط السكر", "needs_review": true}
+      ]
+    },
+    {
+      "id": "retinal_exam",
+      "canonical_name": "Retinal Examination",
+      "class": "exam",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "retinal examination",
+        "dilated retinal examination",
+        "retinal exam",
+        "eye exam",
+        "dilated funduscopy",
+        "fundus examination",
+        "eye screening",
+        "retinal screen"
+      ],
+      "arabic_synonyms": [
+        {"term": "فحص قاع العين", "needs_review": true},
+        {"term": "فحص الشبكية", "needs_review": true},
+        {"term": "كشف العيون", "needs_review": true}
+      ]
+    },
+    {
+      "id": "foot_exam",
+      "canonical_name": "Foot Examination",
+      "class": "exam",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "foot examination",
+        "foot exam",
+        "preventive foot screening",
+        "diabetic foot screening",
+        "foot inspection"
+      ],
+      "arabic_synonyms": [
+        {"term": "فحص القدمين", "needs_review": true},
+        {"term": "فحص القدم السكري", "needs_review": true},
+        {"term": "كشف القدمين", "needs_review": true}
+      ]
+    },
+    {
+      "id": "metformin",
+      "canonical_name": "Metformin",
+      "class": "biguanide",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Metformin",
+        "Glucophage"
+      ],
+      "arabic_synonyms": [
+        {"term": "ميتفورمين", "needs_review": true},
+        {"term": "جلوكوفاج", "needs_review": true}
+      ]
+    },
+    {
+      "id": "gliclazide",
+      "canonical_name": "Gliclazide",
+      "class": "sulfonylurea",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Gliclazide",
+        "Diamicron"
+      ],
+      "arabic_synonyms": [
+        {"term": "جليكلازيد", "needs_review": true},
+        {"term": "دياميكرون", "needs_review": true}
+      ]
+    },
+    {
+      "id": "glimepiride",
+      "canonical_name": "Glimepiride",
+      "class": "sulfonylurea",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Glimepiride",
+        "Amaryl"
+      ],
+      "arabic_synonyms": [
+        {"term": "جليميبيريد", "needs_review": true},
+        {"term": "أماريل", "needs_review": true}
+      ]
+    },
+    {
+      "id": "linagliptin",
+      "canonical_name": "Linagliptin",
+      "class": "DPP-4 inhibitor",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Linagliptin",
+        "Trajenta"
+      ],
+      "arabic_synonyms": [
+        {"term": "ليناجليبتين", "needs_review": true},
+        {"term": "تراجينتا", "needs_review": true}
+      ]
+    },
+    {
+      "id": "sitagliptin",
+      "canonical_name": "Sitagliptin",
+      "class": "DPP-4 inhibitor",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Sitagliptin",
+        "Januvia"
+      ],
+      "arabic_synonyms": [
+        {"term": "سيتاجليبتين", "needs_review": true},
+        {"term": "جانوفيا", "needs_review": true}
+      ]
+    },
+    {
+      "id": "dapagliflozin",
+      "canonical_name": "Dapagliflozin",
+      "class": "SGLT2 inhibitor",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Dapagliflozin",
+        "Forxiga"
+      ],
+      "arabic_synonyms": [
+        {"term": "داباجليفلوزين", "needs_review": true},
+        {"term": "فوركسيجا", "needs_review": true}
+      ]
+    },
+    {
+      "id": "empagliflozin",
+      "canonical_name": "Empagliflozin",
+      "class": "SGLT2 inhibitor",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Empagliflozin",
+        "Jardiance"
+      ],
+      "arabic_synonyms": [
+        {"term": "إمباجليفلوزين", "needs_review": true},
+        {"term": "جارديانس", "needs_review": true}
+      ]
+    },
+    {
+      "id": "dulaglutide",
+      "canonical_name": "Dulaglutide",
+      "class": "GLP-1 receptor agonist",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Dulaglutide",
+        "Trulicity"
+      ],
+      "arabic_synonyms": [
+        {"term": "دولا جلوتيد", "needs_review": true},
+        {"term": "تروليسيتي", "needs_review": true}
+      ]
+    },
+    {
+      "id": "semaglutide",
+      "canonical_name": "Semaglutide",
+      "class": "GLP-1 receptor agonist",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Semaglutide",
+        "Ozempic",
+        "Rybelsus"
+      ],
+      "arabic_synonyms": [
+        {"term": "سيماجلوتيد", "needs_review": true},
+        {"term": "أوزمبيك", "needs_review": true}
+      ]
+    },
+    {
+      "id": "pioglitazone",
+      "canonical_name": "Pioglitazone",
+      "class": "thiazolidinedione",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Pioglitazone",
+        "Actos"
+      ],
+      "arabic_synonyms": [
+        {"term": "بيوجليتازون", "needs_review": true},
+        {"term": "أكتوس", "needs_review": true}
+      ]
+    },
+    {
+      "id": "atorvastatin",
+      "canonical_name": "Atorvastatin",
+      "class": "statin",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Atorvastatin",
+        "Lipitor"
+      ],
+      "arabic_synonyms": [
+        {"term": "أتورفاستاتين", "needs_review": true},
+        {"term": "ليبيتور", "needs_review": true}
+      ]
+    },
+    {
+      "id": "insulin",
+      "canonical_name": "Insulin",
+      "class": "insulin",
+      "code": "",
+      "expected_units": "",
+      "synonyms": [
+        "Insulin",
+        "Insulin Aspart",
+        "Insulin Glargine",
+        "Insulin Lispro",
+        "Lantus",
+        "Novorapid",
+        "Humalog"
+      ],
+      "arabic_synonyms": [
+        {"term": "إنسولين", "needs_review": true},
+        {"term": "انسولين", "needs_review": true}
+      ]
+    }
+  ]
+}

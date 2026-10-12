@@ -33,10 +33,7 @@ KIND_PREFIX = [
 
 def split_pages(text: str) -> list[tuple[int, str]]:
     parts = PAGE_RE.split(text)
-    pages = [
-        (int(parts[i]), parts[i + 1].strip("\n"))
-        for i in range(1, len(parts) - 1, 2)
-    ]
+    pages = [(int(parts[i]), parts[i + 1].strip("\n")) for i in range(1, len(parts) - 1, 2)]
     if not pages and text.strip():
         pages = [(1, text.strip("\n"))]
     return pages
@@ -63,10 +60,14 @@ def why_for(ftype: str, trends: dict, meds: list[str]) -> str:
         extra = " Metformin is listed as ongoing." if "Metformin" in meds else ""
         return f"eGFR went from {egfr[0]:g} to {egfr[-1]:g} across the visits.{extra}"
     return {
-        "missing_uacr": "No urine albumin-creatinine ratio appears in the files from the last 12 months.",
+        "missing_uacr": (
+            "No urine albumin-creatinine ratio appears in the files from the last 12 months."
+        ),
         "overdue_retinal_exam": "The last retinal exam on file is more than 12 months old.",
         "hypoglycemia_symptoms": "A visit note describes symptoms that may relate to low glucose.",
-        "medication_changed_no_followup": "A medication change is documented without a later follow-up note.",
+        "medication_changed_no_followup": (
+            "A medication change is documented without a later follow-up note."
+        ),
         "missed_foot_exam": "No foot examination appears in the files from the last 12 months.",
         "lipid_panel_overdue": "No lipid panel appears in the files from the last 12 months.",
     }.get(ftype, "This is documented in the source file.")

@@ -2,7 +2,8 @@ import re
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File as UploadFileField, Header, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Header, HTTPException, UploadFile
+from fastapi import File as UploadFileField
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -40,14 +41,18 @@ def get_brief(pid: str, db: Session = Depends(get_db), actor: str = Depends(acto
 
 
 @router.get("/patients/{pid}/sources/{chunk_id}", response_model=schemas.SourcePage)
-def get_source(pid: str, chunk_id: str, db: Session = Depends(get_db), actor: str = Depends(actor_header)):
+def get_source(
+    pid: str, chunk_id: str, db: Session = Depends(get_db), actor: str = Depends(actor_header)
+):
     patient_or_404(db, pid)
     chunk = db.get(Chunk, chunk_id)
     if chunk is None or chunk.patient_id != pid:
         raise HTTPException(status_code=404, detail="Source not found")
     f = db.get(File, chunk.file_id)
     ins = db.scalars(
-        select(Insight).where(Insight.patient_id == pid, Insight.source_chunk_id == chunk_id).order_by(Insight.rank)
+        select(Insight)
+        .where(Insight.patient_id == pid, Insight.source_chunk_id == chunk_id)
+        .order_by(Insight.rank)
     ).first()
     quote = (ins.quote or "") if ins else ""
     start = chunk.text.find(quote) if quote else -1
@@ -63,8 +68,19 @@ def get_source(pid: str, chunk_id: str, db: Session = Depends(get_db), actor: st
     )
 
 
+@router.get("/patients/{pid}/suggested-questions", response_model=list[str])
+def get_suggested_questions(pid: str, db: Session = Depends(get_db)):
+    p = patient_or_404(db, pid)
+    return services.get_suggested_questions(db, p)
+
+
 @router.post("/patients/{pid}/chat", response_model=schemas.ChatAnswer)
-def chat(pid: str, body: schemas.ChatRequest, db: Session = Depends(get_db), actor: str = Depends(actor_header)):
+def chat(
+    pid: str,
+    body: schemas.ChatRequest,
+    db: Session = Depends(get_db),
+    actor: str = Depends(actor_header),
+):
     p = patient_or_404(db, pid)
     answer = services.answer_question(db, p, body.question)
     services.audit(db, actor, "chat_question", pid, body.question[:200])
@@ -72,7 +88,12 @@ def chat(pid: str, body: schemas.ChatRequest, db: Session = Depends(get_db), act
 
 
 @router.post("/insights/{insight_id}/review", response_model=schemas.ReviewResult)
-def review(insight_id: str, body: schemas.ReviewRequest, db: Session = Depends(get_db), actor: str = Depends(actor_header)):
+def review(
+    insight_id: str,
+    body: schemas.ReviewRequest,
+    db: Session = Depends(get_db),
+    actor: str = Depends(actor_header),
+):
     ins = db.get(Insight, insight_id)
     if ins is None:
         raise HTTPException(status_code=404, detail="Insight not found")
@@ -86,7 +107,12 @@ def review(insight_id: str, body: schemas.ReviewRequest, db: Session = Depends(g
 
 
 @router.post("/patients/{pid}/files", response_model=schemas.UploadResult)
-async def upload(pid: str, file: UploadFile = UploadFileField(...), db: Session = Depends(get_db), actor: str = Depends(actor_header)):
+async def upload(
+    pid: str,
+    file: UploadFile = UploadFileField(...),
+    db: Session = Depends(get_db),
+    actor: str = Depends(actor_header),
+):
     patient_or_404(db, pid)
     settings = get_settings()
     safe = re.sub(r"[^A-Za-z0-9._-]", "_", Path(file.filename or "upload").name)[:120] or "upload"
@@ -105,7 +131,15 @@ async def upload(pid: str, file: UploadFile = UploadFileField(...), db: Session 
                 raise HTTPException(status_code=413, detail="File too large")
             out.write(chunk)
     db.add(
-        File(id=file_id, patient_id=pid, name=safe, kind="upload", is_scan=False, status="queued", storage_path=str(dest))
+        File(
+            id=file_id,
+            patient_id=pid,
+            name=safe,
+            kind="upload",
+            is_scan=False,
+            status="queued",
+            storage_path=str(dest),
+        )
     )
     db.commit()
     services.audit(db, actor, "upload", pid, safe)
@@ -116,6 +150,8 @@ async def upload(pid: str, file: UploadFile = UploadFileField(...), db: Session 
 def get_audit(db: Session = Depends(get_db)):
     rows = db.scalars(select(AuditLog).order_by(AuditLog.id.desc()).limit(200)).all()
     return [
-        schemas.AuditEntry(time=r.ts.isoformat(), actor=r.actor, action=r.action, patient_id=r.patient_id)
+        schemas.AuditEntry(
+            time=r.ts.isoformat(), actor=r.actor, action=r.action, patient_id=r.patient_id
+        )
         for r in rows
     ]

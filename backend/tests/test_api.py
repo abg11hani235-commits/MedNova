@@ -105,3 +105,14 @@ def test_clean_note_hides_internal_term():
     assert _clean_note(raw) == "No record in 14 readable files in the 12 months before 18 Jun 2026"
     assert _clean_note(None) is None
     assert _clean_note("Last recorded 2023") == "Last recorded 2023"
+
+
+def test_clean_detail():
+    from app.services import _clean_detail
+
+    assert _clean_detail("Eye_Report_2023-11-20.pdf p.1 (dated 14 Oct 2023)") == "dated 14 Oct 2023"
+    assert _clean_detail("Lab_Report_2026-05-11.pdf p.1") == "Lab_Report_2026-05-11.pdf p.1"
+
+
+def test_suggested_questions_unknown_patient(client):
+    assert client.get("/patients/9999/suggested-questions").status_code == 404

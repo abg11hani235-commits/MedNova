@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -37,7 +37,7 @@ class EmbeddingType(TypeDecorator):
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Patient(Base):
@@ -84,9 +84,7 @@ class Insight(Base):
     severity: Mapped[str] = mapped_column(String(16))
     statement: Mapped[str] = mapped_column(Text)
     why: Mapped[str | None] = mapped_column(Text, nullable=True)
-    source_chunk_id: Mapped[str | None] = mapped_column(
-        ForeignKey("chunks.id"), nullable=True
-    )
+    source_chunk_id: Mapped[str | None] = mapped_column(ForeignKey("chunks.id"), nullable=True)
     quote: Mapped[str | None] = mapped_column(Text, nullable=True)
     absence_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_state: Mapped[str] = mapped_column(String(16), default="none")

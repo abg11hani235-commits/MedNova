@@ -3,10 +3,11 @@
 Revision ID: 0001
 Revises:
 """
+
 import sqlalchemy as sa
-from alembic import op
 from pgvector.sqlalchemy import Vector
 
+from alembic import op
 from app.config import get_settings
 
 revision = "0001"
@@ -33,7 +34,9 @@ def upgrade() -> None:
     op.create_table(
         "files",
         sa.Column("id", sa.String(200), primary_key=True),
-        sa.Column("patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True),
+        sa.Column(
+            "patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True
+        ),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("kind", sa.String(32), nullable=False),
         sa.Column("date", sa.String(10), nullable=True),
@@ -44,7 +47,9 @@ def upgrade() -> None:
     op.create_table(
         "chunks",
         sa.Column("id", sa.String(240), primary_key=True),
-        sa.Column("patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True),
+        sa.Column(
+            "patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True
+        ),
         sa.Column("file_id", sa.String(200), sa.ForeignKey("files.id"), nullable=False, index=True),
         sa.Column("page", sa.Integer, nullable=False),
         sa.Column("text", sa.Text, nullable=False),
@@ -53,7 +58,9 @@ def upgrade() -> None:
     op.create_table(
         "insights",
         sa.Column("id", sa.String(200), primary_key=True),
-        sa.Column("patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True),
+        sa.Column(
+            "patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True
+        ),
         sa.Column("type", sa.String(64), nullable=False),
         sa.Column("severity", sa.String(16), nullable=False),
         sa.Column("statement", sa.Text, nullable=False),
@@ -68,7 +75,9 @@ def upgrade() -> None:
     op.create_table(
         "chat_messages",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-        sa.Column("patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True),
+        sa.Column(
+            "patient_id", sa.String(64), sa.ForeignKey("patients.id"), nullable=False, index=True
+        ),
         sa.Column("role", sa.String(16), nullable=False),
         sa.Column("content", sa.Text, nullable=False),
         sa.Column("answerable", sa.Boolean, nullable=True),

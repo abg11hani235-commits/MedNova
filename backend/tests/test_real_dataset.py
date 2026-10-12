@@ -53,3 +53,13 @@ def test_every_sourced_finding_resolves_to_a_chunk(real_client):
 def test_unanswerable_questions_are_refused(real_client):
     r = real_client.post("/patients/1042/chat", json={"question": "Does the patient smoke?"}).json()
     assert r["answerable"] is False and r["source"] is None
+
+
+def test_suggested_questions(real_client):
+    for pid in ("1042", "1044"):
+        res = real_client.get(f"/patients/{pid}/suggested-questions")
+        assert res.status_code == 200
+        items = res.json()
+        assert len(items) == 3
+        assert all(isinstance(q, str) and q.strip() for q in items)
+    assert real_client.get("/patients/9999/suggested-questions").status_code == 404

@@ -48,6 +48,12 @@ Rules that apply to every endpoint:
      highlight: { start, end } }               // character offsets of the quote in page_text
 ~~~
 
+### GET /patients/{id}/suggested-questions
+~~~
+-> string[]                                    // max 3 suggested questions
+~~~
+Fixture mode: up to 2 answerable questions from the patient's ground-truth chat_questions plus 1 unanswerable one, so the demo shows both an answer and the refusal. Unknown patient returns 404.
+
 ### POST /patients/{id}/chat
 ~~~
 body: { question }

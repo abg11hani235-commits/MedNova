@@ -21,6 +21,18 @@ def _clean_note(note: str | None) -> str | None:
     return re.sub(r"\s*within 12 months of as_of_date \((\d{4})-(\d{2})-(\d{2})\)", repl, note)
 
 
+_FILE_PREFIX = re.compile(r"^[\w\-]+\.pdf p\.\d+\s*")
+
+
+def _clean_detail(text: str | None) -> str:
+    raw = text or ""
+    t = _clean_note(raw) or ""
+    t = _FILE_PREFIX.sub("", t).strip()
+    if t.startswith("(") and t.endswith(")"):
+        t = t[1:-1].strip()
+    return t or raw
+
+
 SEV_RANK = {"urgent_review": 0, "review": 1, "info": 2}
 TARGETS = {"hba1c": (6.0, 7.0), "egfr": (60.0, 120.0)}
 GAP_TYPES = {
@@ -129,7 +141,7 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
             schemas.CareGap(
                 name=name,
                 status=g.get("status", "missing"),
-                detail=_clean_note(g.get("evidence") or g.get("absence_note") or ""),
+                detail=_clean_detail(g.get("evidence") or g.get("absence_note") or ""),
                 source=sources.get(ins.id) if ins else None,
             )
         )
@@ -213,3 +225,16 @@ def answer_question(db: Session, p: Patient, question: str) -> schemas.ChatAnswe
 
 def count_chunks(db: Session, pid: str) -> int:
     return db.scalar(select(func.count()).select_from(Chunk).where(Chunk.patient_id == pid)) or 0
+
+
+def get_suggested_questions(db: Session, p: Patient) -> list[str]:
+    answerable = [
+        q["question"] for q in p.chat_questions if q.get("answerable") and q.get("question")
+    ]
+    unanswerable = [
+        q["question"] for q in p.chat_questions if not q.get("answerable") and q.get("question")
+    ]
+    out = answerable[:2]
+    if unanswerable:
+        out.append(unanswerable[0])
+    return out[:3]

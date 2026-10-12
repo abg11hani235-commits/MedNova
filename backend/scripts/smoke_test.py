@@ -176,7 +176,9 @@ def test_smoke():
         # Get patient 1042's first unreviewed insight
         p1042_before = next(p for p in client.get("/patients").json() if p["id"] == "1042")
         open_before = p1042_before["open_items"]["urgent"] + p1042_before["open_items"]["review"]
-        ins_to_review = snap[0]["id"]
+        ins_to_review = next(
+            (i["id"] for i in snap if i.get("review_state") != "reviewed"), snap[0]["id"]
+        )
 
         r = client.post(f"/insights/{ins_to_review}/review", json={"action": "reviewed"})
         review_ok = r.status_code == 200 and r.json().get("review_state") == "reviewed"
@@ -220,6 +222,27 @@ def test_smoke():
             "GET /audit contains view_brief, view_source, chat_question, review_reviewed, upload",
             audit_ok,
             f"found={sorted(list(audit_actions))}",
+        )
+
+        # 11. GET /patients/{id}/suggested-questions
+        r1042 = client.get("/patients/1042/suggested-questions")
+        q1042 = r1042.json() if r1042.status_code == 200 else []
+        r1044 = client.get("/patients/1044/suggested-questions")
+        q1044 = r1044.json() if r1044.status_code == 200 else []
+        r_unk = client.get("/patients/9999/suggested-questions")
+        sugg_ok = (
+            r1042.status_code == 200
+            and len(q1042) == 3
+            and all(isinstance(q, str) and q.strip() for q in q1042)
+            and r1044.status_code == 200
+            and len(q1044) == 3
+            and all(isinstance(q, str) and q.strip() for q in q1044)
+            and r_unk.status_code == 404
+        )
+        check(
+            "GET /patients/{id}/suggested-questions returns 3 items for 1042/1044, 404 for unknown",
+            sugg_ok,
+            f"1042_count={len(q1042)}, 1044_count={len(q1044)}, unk_status={r_unk.status_code}",
         )
 
     if not all_passed:

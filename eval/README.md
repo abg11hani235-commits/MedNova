@@ -121,6 +121,9 @@ Combines all pipeline run artifacts in `eval/results/` into a concise comparison
 
 ## 6. Secret Redaction & Security
 
-- `GROQ_API_KEY` must only reside in `.env`.
-- LLM cache keys (`eval/cache/llm/`) are hashed with SHA-256 and never contain raw API credentials.
-- All log outputs and exception traces redact secrets as `[REDACTED]`.
+- `LLM_API_KEY` (or legacy `GROQ_API_KEY`) resides in `.env` only. Never print keys or key lengths.
+- `LLM_BASE_URL` points to OpenAI-compatible endpoints (default placeholder: `https://openrouter.ai/api/v1`).
+- `LLM_MODEL` specifies the model identifier. If an endpoint ends in `:free`, note daily rate limits and usage policies.
+- `LLM_STRUCTURED_OUTPUT=false` by default, using plain JSON instructions plus Pydantic validation (set to `true` only for endpoints supporting strict json_object schemas).
+- LLM cache files (`eval/.cache/`) are hashed with SHA-256 and never contain raw API credentials.
+- All log outputs and exception traces redact secrets.

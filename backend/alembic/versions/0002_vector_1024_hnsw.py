@@ -5,9 +5,10 @@ Revises: 0001
 """
 
 import sqlalchemy as sa
+from pgvector.sqlalchemy import Vector
+
 from alembic import op
 from app.config import get_settings
-from pgvector.sqlalchemy import Vector
 
 revision = "0002"
 down_revision = "0001"

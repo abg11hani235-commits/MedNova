@@ -12,11 +12,12 @@ import sys
 import time
 from typing import Any
 
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from app.config import get_settings
 from app.db import get_engine
 from app.models import Chunk
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 
 def get_embedder(model_name: str | None = None) -> Any:

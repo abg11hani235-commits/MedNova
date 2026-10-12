@@ -52,6 +52,7 @@ out/
 frontend/out/
 build/
 frontend/build/
+*.tsbuildinfo
 .npm
 npm-debug.log*
 yarn-debug.log*

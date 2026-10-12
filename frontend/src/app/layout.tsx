@@ -1,38 +1,30 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
+import type { ReactNode } from "react";
+
 import "./globals.css";
+import "./clinsight.css";
+import { DISCLAIMER } from "../lib/constants";
+import { Providers } from "./providers";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-arabic",
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const arabic = IBM_Plex_Sans_Arabic({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700"], variable: "--font-arabic" });
 
 export const metadata: Metadata = {
-  title: "Clinsight | Decision Support for Diabetes Care",
-  description: "Clinical decision support web application for diabetes doctors.",
+  title: "Clinsight",
+  description: "Every finding, traced to its source.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${ibmPlexArabic.variable}`}>
-      <body className="flex min-h-screen flex-col bg-clinsight-bg text-clinsight-text antialiased">
-        <main className="flex-1">{children}</main>
-        <footer className="border-t border-clinsight-border bg-white px-4 py-3 text-center text-xs text-clinsight-muted">
-          Clinical decision support only. Verify findings against the patient record and current
-          clinical guidance. Not a substitute for clinical judgment.
-        </footer>
+    <html lang="en">
+      <body className={`${inter.variable} ${arabic.variable}`}>
+        <Providers>
+          <div className="page">
+            <div className="grow">{children}</div>
+            <footer className="foot">{DISCLAIMER}</footer>
+          </div>
+        </Providers>
       </body>
     </html>
   );

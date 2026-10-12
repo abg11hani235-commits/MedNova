@@ -1,13 +1,12 @@
 """Runs only when the synthetic dataset exists in /data (not in CI without it)."""
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import sessionmaker
-
 from app.db import get_db, make_engine
 from app.main import app
 from app.models import Base
 from app.seed import seed_all
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.fixture()

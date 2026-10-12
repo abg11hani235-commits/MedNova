@@ -1,7 +1,6 @@
 import importlib.util
 
 import pytest
-
 from app.config import ROOT, get_settings
 from app.constants import REFUSAL_TEXT
 

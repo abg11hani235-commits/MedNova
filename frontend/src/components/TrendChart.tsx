@@ -12,6 +12,14 @@ interface DotProps {
   payload?: TrendPoint;
 }
 
+export function niceTicks(lo: number, hi: number): number[] {
+  const span = hi - lo;
+  const step = span <= 6 ? 1 : span <= 20 ? 5 : 10;
+  const out: number[] = [];
+  for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) out.push(t);
+  return out;
+}
+
 export function TrendChart({ title, trend }: { title: string; trend: Trend }) {
   const vals = trend.points.map((p) => p.value);
   if (vals.length === 0) return <div className="muted">{title}: no data</div>;
@@ -46,7 +54,7 @@ export function TrendChart({ title, trend }: { title: string; trend: Trend }) {
             <CartesianGrid stroke="#EEF3F6" vertical={false} />
             <ReferenceArea y1={Math.max(min, lo)} y2={Math.min(max, hi)} fill="#E6F2F3" fillOpacity={1} ifOverflow="hidden" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#5B6B7A" }} />
-            <YAxis domain={[lo, hi]} tick={{ fontSize: 11, fill: "#5B6B7A" }} width={34} />
+            <YAxis domain={[lo, hi]} ticks={niceTicks(lo, hi)} tick={{ fontSize: 11, fill: "#5B6B7A" }} width={34} />
             <Tooltip
               formatter={(value) => [String(value), title]}
               labelFormatter={(_label, payload) => payload?.[0]?.payload?.date ?? ""}

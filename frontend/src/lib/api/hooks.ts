@@ -10,6 +10,8 @@ export const useBrief = (id: string) =>
   useQuery({ queryKey: ["brief", id], queryFn: () => getApi().getBrief(id), enabled: !!id });
 export const useSource = (id: string, chunkId: string) =>
   useQuery({ queryKey: ["source", id, chunkId], queryFn: () => getApi().getSource(id, chunkId), enabled: !!id && !!chunkId });
+export const useSuggestions = (id: string) =>
+  useQuery({ queryKey: ["suggestions", id], queryFn: () => getApi().suggestedQuestions(id), enabled: !!id });
 export const useAudit = () => useQuery({ queryKey: ["audit"], queryFn: () => getApi().audit() });
 
 export function useReview(patientId: string) {

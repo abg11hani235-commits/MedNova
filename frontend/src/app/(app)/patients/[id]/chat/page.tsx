@@ -7,7 +7,7 @@ import { useState, type FormEvent } from "react";
 import { ChatBubble } from "../../../../../components/ChatBubble";
 import { InsightRow } from "../../../../../components/InsightCard";
 import { SourceChip } from "../../../../../components/SourceChip";
-import { useBrief, useChat } from "../../../../../lib/api/hooks";
+import { useBrief, useChat, useSuggestions } from "../../../../../lib/api/hooks";
 import type { Source } from "../../../../../lib/api/types";
 
 interface Msg {
@@ -17,12 +17,11 @@ interface Msg {
   source?: Source | null;
 }
 
-const SUGGESTED = ["When was the medication last changed?", "What was the last HbA1c?", "Does the patient smoke?"];
-
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>();
   const brief = useBrief(id);
   const chat = useChat(id);
+  const suggestions = useSuggestions(id);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
 
@@ -58,7 +57,7 @@ export default function ChatPage() {
         </section>
         <section className="card chat" aria-label="Chat">
           <div className="row">
-            {SUGGESTED.map((s) => (
+            {(suggestions.data ?? []).map((s) => (
               <button key={s} className="chip" style={{ cursor: "pointer" }} onClick={() => void ask(s)}>{s}</button>
             ))}
           </div>

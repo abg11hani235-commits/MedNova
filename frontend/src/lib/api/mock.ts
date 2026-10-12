@@ -155,6 +155,10 @@ export const mockApi: Api = {
       ? { answer: hit.a, answerable: true, source: hit.source }
       : { answer: REFUSAL_TEXT, answerable: false, source: null };
   },
+  async suggestedQuestions(_id) {
+    await wait();
+    return ["When was the medication last changed?", "What was the last HbA1c?", "Does the patient smoke?"];
+  },
   async review(insightId, action) {
     await wait();
     const cur = reviewState.get(insightId) ?? { review_state: "none" as ReviewState, feedback: "none" as Feedback };

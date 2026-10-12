@@ -20,6 +20,7 @@ const realApi: Api = {
   getBrief: (id) => http(`/patients/${id}/brief`),
   getSource: (id, chunkId) => http(`/patients/${id}/sources/${encodeURIComponent(chunkId)}`),
   chat: (id, question) => http(`/patients/${id}/chat`, json({ question })),
+  suggestedQuestions: (id) => http(`/patients/${id}/suggested-questions`),
   review: (insightId, action) => http(`/insights/${insightId}/review`, json({ action })),
   upload: (id, file) => {
     const form = new FormData();

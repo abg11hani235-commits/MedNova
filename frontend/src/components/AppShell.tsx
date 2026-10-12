@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="av" aria-label="Signed in as doctor">DR</span>
       </header>
       <nav className="side" aria-label="Main">
-        {item("/patients", "Patients", !id)}
+        {item("/patients", "Patients", true)}
         {id ? item(`/patients/${id}`, "Patient Brief", true) : <span className="disabled">Patient Brief</span>}
         {id ? item(`/patients/${id}/chat`, "Ask the Chart") : <span className="disabled">Ask the Chart</span>}
         {item("/upload", "Upload")}

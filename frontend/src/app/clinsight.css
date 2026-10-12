@@ -55,3 +55,4 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 .paper{white-space:pre-wrap}
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.step{padding:14px;border:1px solid #DDE5EA;border-radius:12px;background:#fff}
 .step.dn{border-color:#0E7C86}.step.on{border-color:#1F4E79;box-shadow:0 0 0 2px #DBE7F1}
+.main{max-width:1280px;width:100%;margin-inline:auto}

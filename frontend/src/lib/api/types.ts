@@ -115,6 +115,7 @@ export interface Api {
   getBrief(id: string): Promise<Brief>;
   getSource(id: string, chunkId: string): Promise<SourcePage>;
   chat(id: string, question: string): Promise<ChatAnswer>;
+  suggestedQuestions(id: string): Promise<string[]>;
   review(insightId: string, action: ReviewAction): Promise<ReviewResult>;
   upload(id: string, file: File): Promise<UploadResult>;
   audit(): Promise<AuditEntry[]>;

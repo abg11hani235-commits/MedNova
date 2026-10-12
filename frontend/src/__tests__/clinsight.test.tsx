@@ -3,14 +3,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { AppShell } from "../components/AppShell";
 import { ChatBubble } from "../components/ChatBubble";
 import { SeverityBadge } from "../components/SeverityBadge";
 import { SourceChip } from "../components/SourceChip";
+import { niceTicks } from "../components/TrendChart";
 import { REFUSAL_TEXT } from "../lib/constants";
+
+let mockPathname = "/patients/1042";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "1042" }),
-  usePathname: () => "/patients/1042",
+  usePathname: () => mockPathname,
 }));
 
 class RO {
@@ -22,7 +26,10 @@ class RO {
 
 import BriefPage from "../app/(app)/patients/[id]/page";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  mockPathname = "/patients/1042";
+});
 
 describe("SeverityBadge", () => {
   it("shows a text label and a severity class (never color alone)", () => {
@@ -68,3 +75,27 @@ describe("Patient Brief", () => {
     expect(screen.getByText(/Based on 14 of 17 files/)).toBeInTheDocument();
   });
 });
+
+describe("TrendChart niceTicks", () => {
+  it("computes nice ticks for round axis numbers", () => {
+    expect(niceTicks(5, 10)).toEqual([5, 6, 7, 8, 9, 10]);
+    expect(niceTicks(47, 73)).toEqual([50, 60, 70]);
+  });
+});
+
+describe("AppShell", () => {
+  it("with the pathname mocked as /patients/1042/chat, only 'Ask the Chart' has aria-current='page'", () => {
+    mockPathname = "/patients/1042/chat";
+    render(
+      <AppShell>
+        <div>Content</div>
+      </AppShell>,
+    );
+    const activeLinks = screen
+      .getAllByRole("link")
+      .filter((el) => el.getAttribute("aria-current") === "page");
+    expect(activeLinks).toHaveLength(1);
+    expect(activeLinks[0]).toHaveTextContent("Ask the Chart");
+  });
+});
+

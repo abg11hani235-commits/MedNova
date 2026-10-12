@@ -16,6 +16,10 @@ import re
 import time
 from typing import Any
 
+from rank_bm25 import BM25Okapi
+from sqlalchemy import select, text
+from sqlalchemy.orm import Session
+
 from app.config import get_settings
 from app.constants import REFUSAL_TEXT
 from app.db import get_engine
@@ -25,9 +29,6 @@ from app.rag.facts import answer_from_facts, extract_patient_facts
 from app.rag.llm import GroqLLMClient
 from app.rag.verify import apply_verifier
 from app.terms.terms import expand_query, normalize_arabic
-from rank_bm25 import BM25Okapi
-from sqlalchemy import select, text
-from sqlalchemy.orm import Session
 
 SYSTEM_PROMPT = f"""You are a clinical decision-support assistant for ClinSight.
 RULES:
@@ -177,6 +178,7 @@ class RAGPipeline:
             chunks_by_id = {c.id: c for c in patient_chunks}
 
             # 2. FACTS PIPELINE ROUTER
+            original_pipeline = pipeline_name
             if pipeline_name == "facts":
                 facts = extract_patient_facts(patient_chunks)
                 facts_ans = answer_from_facts(
@@ -187,6 +189,7 @@ class RAGPipeline:
                 )
                 if facts_ans is not None:
                     facts_ans["latency_ms"] = int((time.time() - start_time) * 1000)
+                    facts_ans["facts_handled"] = True
                     return facts_ans
                 # Fall back to hybrid_terms if facts table has no answer
                 pipeline_name = "hybrid_terms"
@@ -267,6 +270,7 @@ class RAGPipeline:
                     "retrieved_chunk_ids": retrieved_chunk_ids,
                     "usage": {"prompt_tokens": 0, "completion_tokens": 0},
                     "latency_ms": elapsed_ms,
+                    "facts_handled": False if original_pipeline == "facts" else None,
                 }
 
             # 5. GENERATION
@@ -304,4 +308,5 @@ class RAGPipeline:
                 "retrieved_chunk_ids": retrieved_chunk_ids,
                 "usage": usage,
                 "latency_ms": elapsed_ms,
+                "facts_handled": False if original_pipeline == "facts" else None,
             }

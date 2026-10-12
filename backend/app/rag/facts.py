@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.constants import REFUSAL_TEXT
-from app.terms.terms import CONCEPTS, detect_concepts, normalize_arabic
+from app.terms.terms import detect_concepts, normalize_arabic
 
 
 @dataclass
@@ -299,12 +299,14 @@ def extract_patient_facts(chunks: list[Any]) -> list[Fact]:
 
             # 10. Retinal Exam
             if re.search(
-                r"(?:dilated retinal examination|retinal exam|funduscopy)", line_clean, re.I
+                r"(?:dilated retinal examination|retinal exam|funduscopy|"
+                r"dilated eye exam|retinal screen)",
+                line_clean,
+                re.I,
             ):
                 m_ret_date = re.search(r"completed(?:\s+on\s+([^\.]+))?", line_clean, re.I)
                 exam_date = file_date
                 if m_ret_date and m_ret_date.group(1):
-                    # parse date string if present
                     parsed_d = _extract_date_from_header_or_chunk("", m_ret_date.group(1))
                     if parsed_d != "2025-01-01":
                         exam_date = parsed_d
@@ -319,22 +321,25 @@ def extract_patient_facts(chunks: list[Any]) -> list[Fact]:
                     )
                 )
 
-            # 11. Foot Exam
+            # 11. Foot Exam (only completed examinations, never missed/omitted)
             if re.search(r"(?:foot examination|preventive foot screening)", line_clean, re.I):
-                facts.append(
-                    Fact(
-                        concept="foot_exam",
-                        value=file_date,
-                        unit="",
-                        date=file_date,
-                        chunk_id=chunk_id,
-                        quote=line_clean,
-                    )
-                )
+                if not re.search(r"(?:missed|omitted|not performed|deferred)", line_clean, re.I):
+                    if re.search(r"(?:completed|intact)", line_clean, re.I):
+                        facts.append(
+                            Fact(
+                                concept="foot_exam",
+                                value=file_date,
+                                unit="",
+                                date=file_date,
+                                chunk_id=chunk_id,
+                                quote=line_clean,
+                            )
+                        )
 
             # 12. Hypoglycemia symptoms
             if re.search(
-                r"(?:night-time sweating|hypoglycemia|low glucose symptoms|lightheadedness)",
+                r"(?:night-time sweating|hypoglycemia|low glucose symptoms|"
+                r"lightheadedness|sweating)",
                 line_clean,
                 re.I,
             ):
@@ -349,30 +354,43 @@ def extract_patient_facts(chunks: list[Any]) -> list[Fact]:
                     )
                 )
 
-            # 13. Medications
-            for concept_def in CONCEPTS:
-                if concept_def.get("class") in (
-                    "biguanide",
-                    "sulfonylurea",
-                    "DPP-4 inhibitor",
-                    "SGLT2 inhibitor",
-                    "GLP-1 receptor agonist",
-                    "thiazolidinedione",
-                    "statin",
-                    "insulin",
-                ):
-                    med_name = concept_def["canonical_name"]
-                    if re.search(rf"\b{re.escape(med_name)}\b", line_clean, re.I):
-                        facts.append(
-                            Fact(
-                                concept="medication",
-                                value=med_name,
-                                unit="",
-                                date=file_date,
-                                chunk_id=chunk_id,
-                                quote=line_clean,
-                            )
+            # 13. Medications (extract exact names as written in the record)
+            exact_drug_patterns = [
+                "Insulin Glargine",
+                "Insulin Aspart",
+                "Insulin Lispro",
+                "Insulin Degludec",
+                "Insulin Detemir",
+                "Metformin",
+                "Gliclazide",
+                "Glimepiride",
+                "Glipizide",
+                "Empagliflozin",
+                "Dapagliflozin",
+                "Canagliflozin",
+                "Sitagliptin",
+                "Linagliptin",
+                "Vildagliptin",
+                "Semaglutide",
+                "Liraglutide",
+                "Dulaglutide",
+                "Pioglitazone",
+                "Atorvastatin",
+                "Rosuvastatin",
+                "Simvastatin",
+            ]
+            for drug_name in exact_drug_patterns:
+                if re.search(rf"\b{re.escape(drug_name)}\b", line_clean, re.I):
+                    facts.append(
+                        Fact(
+                            concept="medication",
+                            value=drug_name,
+                            unit="",
+                            date=file_date,
+                            chunk_id=chunk_id,
+                            quote=line_clean,
                         )
+                    )
 
     return facts
 
@@ -427,16 +445,24 @@ def classify_question_intent(question: str) -> tuple[str | None, str | None]:
     ):
         return "trend", concept_id
 
-    # 4. Exam date queries (retinal/foot)
-    if (
-        (
-            re.search(r"\b(eye|retin\w*|fundus|foot|feet|podiatr\w*)\b", q_lower)
-            and re.search(r"\b(exam\w*|screen\w*|date|when)\b", q_lower)
-        )
-        or re.search(r"\bwhen was.*(eye|retin\w*|foot|feet)\b", q_lower)
-        or re.search(r"(فحص.*(عين|شبكية|قدم)|متى.*(فحص|عين|قدم))", q_norm)
-    ):
-        return "exam_date", concept_id
+    # 4. Exam date queries (separate eye vs foot strictly)
+    is_eye = bool(
+        re.search(r"\b(eye|retin\w*|fundus|ophthalm\w*)\b", q_lower)
+        or re.search(r"(عين|شبكية|قاع العين)", q_norm)
+    )
+    is_foot = bool(
+        re.search(r"\b(foot|feet|podiatr\w*)\b", q_lower) or re.search(r"(قدم|أقدام)", q_norm)
+    )
+    if is_eye and not is_foot:
+        if re.search(r"\b(exam\w*|screen\w*|date|when|last|most recent)\b", q_lower) or re.search(
+            r"(فحص|متى|آخر|أحدث)", q_norm
+        ):
+            return "exam_date_eye", "retinal_exam"
+    elif is_foot and not is_eye:
+        if re.search(r"\b(exam\w*|screen\w*|date|when|last|most recent)\b", q_lower) or re.search(
+            r"(فحص|متى|آخر|أحدث)", q_norm
+        ):
+            return "exam_date_foot", "foot_exam"
 
     # 5. Value at date (has specific date YYYY-MM-DD or Month YYYY)
     has_date = bool(
@@ -489,6 +515,19 @@ def classify_question_intent(question: str) -> tuple[str | None, str | None]:
     return None, None
 
 
+CANONICAL_NAMES = {
+    "hba1c": "HbA1c",
+    "egfr": "eGFR",
+    "creatinine": "Creatinine",
+    "fasting_glucose": "Fasting Glucose",
+    "total_cholesterol": "Total Cholesterol",
+    "ldl": "LDL",
+    "hdl": "HDL",
+    "triglycerides": "Triglycerides",
+    "uacr": "UACR",
+}
+
+
 def answer_from_facts(
     patient_id: str,
     question: str,
@@ -513,10 +552,10 @@ def answer_from_facts(
         if cfacts:
             last = cfacts[-1]
             unit_str = f" {last.unit}" if last.unit else ""
-            cname = last.concept.upper()
+            cname = CANONICAL_NAMES.get(last.concept, last.concept.upper())
             answer = (
-                f"The last {cname} value was {last.value}{unit_str} on {last.date}. "
-                "Worth reviewing."
+                f"The last {cname} value was {last.value}{unit_str} on {last.date} "
+                f'("{last.quote}"). Worth reviewing.'
             )
             return {
                 "answer": answer,
@@ -525,9 +564,9 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [last.chunk_id],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
 
     elif intent == "value_at_date" and concept_id:
-        # Extract target date from question
         m_date = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", question)
         target_date = m_date.group(1) if m_date else None
         if not target_date:
@@ -542,9 +581,10 @@ def answer_from_facts(
         if matched:
             fact = matched[-1]
             unit_str = f" {fact.unit}" if fact.unit else ""
-            cname = fact.concept.upper()
+            cname = CANONICAL_NAMES.get(fact.concept, fact.concept.upper())
             answer = (
-                f"The {cname} value on {fact.date} was {fact.value}{unit_str}. Worth reviewing."
+                f"The {cname} value on {fact.date} was {fact.value}{unit_str} "
+                f'("{fact.quote}"). Worth reviewing.'
             )
             return {
                 "answer": answer,
@@ -553,6 +593,7 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [fact.chunk_id],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
 
     elif intent == "first_vs_last" and concept_id:
         cfacts = get_concept_facts(concept_id)
@@ -560,9 +601,10 @@ def answer_from_facts(
             first = cfacts[0]
             last = cfacts[-1]
             unit_str = f" {last.unit}" if last.unit else ""
+            cname = CANONICAL_NAMES.get(last.concept, last.concept.upper())
             answer = (
-                f"{last.concept.upper()} changed from {first.value}{unit_str} on {first.date} "
-                f"to {last.value}{unit_str} on {last.date}. Worth reviewing."
+                f"{cname} changed from {first.value}{unit_str} on {first.date} "
+                f'to {last.value}{unit_str} on {last.date} ("{last.quote}"). Worth reviewing.'
             )
             citations = [
                 {"chunk_id": first.chunk_id, "quote": first.quote},
@@ -575,6 +617,7 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [first.chunk_id, last.chunk_id],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
 
     elif intent == "trend" and concept_id:
         cfacts = get_concept_facts(concept_id)
@@ -594,10 +637,10 @@ def answer_from_facts(
                 direction = "changing"
 
             unit_str = f" {last.unit}" if last.unit else ""
-            cname = last.concept.upper()
+            cname = CANONICAL_NAMES.get(last.concept, last.concept.upper())
             answer = (
                 f"{cname} showed a {direction} trend from {first.value}{unit_str} on {first.date} "
-                f"to {last.value}{unit_str} on {last.date}. Worth reviewing."
+                f'to {last.value}{unit_str} on {last.date} ("{last.quote}"). Worth reviewing.'
             )
             citations = [
                 {"chunk_id": first.chunk_id, "quote": first.quote},
@@ -610,6 +653,7 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [first.chunk_id, last.chunk_id],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
 
     elif intent == "medication":
         med_facts = [f for f in facts if f.concept == "medication"]
@@ -618,7 +662,8 @@ def answer_from_facts(
             citations = [{"chunk_id": f.chunk_id, "quote": f.quote} for f in med_facts[:3]]
             meds_str = ", ".join(unique_meds)
             answer = (
-                f"The documented medications in the record include: {meds_str}. Worth reviewing."
+                f"The documented medications in the record include: {meds_str} "
+                f'("{citations[0]["quote"]}"). Worth reviewing.'
             )
             return {
                 "answer": answer,
@@ -627,14 +672,16 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [c["chunk_id"] for c in citations],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
 
-    elif intent == "exam_date":
-        exam_id = concept_id if concept_id in ("retinal_exam", "foot_exam") else "retinal_exam"
-        exam_facts = get_concept_facts(exam_id)
+    elif intent == "exam_date_eye":
+        exam_facts = [f for f in facts if f.concept == "retinal_exam"]
         if exam_facts:
             last = exam_facts[-1]
-            ename = last.concept.replace("_", " ")
-            answer = f"The {ename} was documented on {last.date}. Worth reviewing."
+            answer = (
+                f"The retinal (eye) examination was documented on {last.date}: "
+                f'"{last.quote}". Worth reviewing.'
+            )
             return {
                 "answer": answer,
                 "answerable": True,
@@ -642,13 +689,31 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [last.chunk_id],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
+
+    elif intent == "exam_date_foot":
+        exam_facts = [f for f in facts if f.concept == "foot_exam"]
+        if exam_facts:
+            last = exam_facts[-1]
+            answer = (
+                f"The foot examination was documented on {last.date}: "
+                f'"{last.quote}". Worth reviewing.'
+            )
+            return {
+                "answer": answer,
+                "answerable": True,
+                "citations": [{"chunk_id": last.chunk_id, "quote": last.quote}],
+                "retrieved_chunk_ids": [last.chunk_id],
+                "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+            }
+        return None
 
     elif intent == "symptom":
         sym_facts = [f for f in facts if f.concept == "hypoglycemia_symptoms"]
         if sym_facts:
             last = sym_facts[-1]
             answer = (
-                f"Low glucose / hypoglycemia symptoms were documented on {last.date}. "
+                f'Documented hypoglycemia / low glucose symptoms: "{last.quote}" on {last.date}. '
                 "Worth reviewing."
             )
             return {
@@ -658,9 +723,9 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [last.chunk_id],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
 
     elif intent == "absence":
-        # Check if concept is absent
         target_concept = concept_id or "uacr"
         cfacts = get_concept_facts(target_concept)
         if len(cfacts) == 0:
@@ -672,9 +737,10 @@ def answer_from_facts(
             ]
             min_date = min(dates) if dates else "2025-01-01"
             max_date = max(dates) if dates else "2026-06-30"
+            cname = CANONICAL_NAMES.get(target_concept, target_concept.upper())
             answer = (
                 f"{REFUSAL_TEXT} "
-                f"Searched for {target_concept.upper()} across {num_files} readable pages "
+                f"Searched for {cname} across {num_files} readable pages "
                 f"spanning {min_date} to {max_date}."
             )
             return {
@@ -684,5 +750,8 @@ def answer_from_facts(
                 "retrieved_chunk_ids": [],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0},
             }
+        return None
+
+    return None
 
     return None

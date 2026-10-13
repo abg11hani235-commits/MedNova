@@ -84,3 +84,48 @@ def test_stratified_sampling():
     # Proportional patient distribution across all 10 patients
     sampled_pids = {q["patient_id"] for q in sample20}
     assert len(sampled_pids) == 10
+
+
+def test_evidence_tokens_trend_derivation():
+    from eval.run_eval import extract_evidence_tokens
+
+    sample_trend = {
+        "id": "q-1042-trend",
+        "patient_id": "1042",
+        "type": "trend",
+        "expected_behavior": "answer",
+        "expected_values": ["rising"],
+    }
+    gt_mock = {
+        "1042": {
+            "trends": {
+                "hba1c": [
+                    {"date": "2025-03-12", "value": 7.4},
+                    {"date": "2026-06-18", "value": 8.9},
+                ]
+            }
+        }
+    }
+    tokens = extract_evidence_tokens(sample_trend, gt_mock)
+    assert tokens == [("7.4", False), ("8.9", False)]
+
+
+def test_chunk_satisfies_token_with_date_metadata():
+    from unittest.mock import MagicMock
+
+    from eval.run_eval import chunk_satisfies_token
+
+    chunk = MagicMock()
+    chunk.file_id = "f-123"
+    chunk.text = "Glycated Hemoglobin (HbA1c): 8.9%"
+
+    f_obj = MagicMock()
+    f_obj.date = "2026-06-18"
+    files_map = {"f-123": f_obj}
+
+    # Value token satisfied by text
+    assert chunk_satisfies_token(chunk, "8.9", is_date=False, files_by_id=files_map) is True
+    # Date token not in body text, but satisfied by file metadata date
+    assert chunk_satisfies_token(chunk, "2026-06-18", is_date=True, files_by_id=files_map) is True
+    # Different date token not satisfied
+    assert chunk_satisfies_token(chunk, "2025-01-01", is_date=True, files_by_id=files_map) is False

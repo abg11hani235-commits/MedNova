@@ -31,11 +31,78 @@ from app.models import Chunk, File
 from app.rag.llm import check_credentials
 from app.rag.pipeline import SYSTEM_PROMPT, RAGPipeline
 
-from eval.normalize import matches_all_expected_values, value_matches
+from eval.normalize import matches_all_expected_values, try_parse_date, value_matches
 
 EVAL_DIR = ROOT / "eval"
 DEFAULT_QUESTIONS_FILE = EVAL_DIR / "questions.jsonl"
 RESULTS_DIR = EVAL_DIR / "results"
+
+DATE_REGEX = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def extract_evidence_tokens(
+    sample: dict[str, Any],
+    ground_truth_by_pid: dict[str, dict[str, Any]] | None = None,
+) -> list[tuple[str, bool]]:
+    """Extract retrieval target tokens for a question.
+
+    Returns list of (token_str, is_date_bool).
+    - Derived words ('rising', 'falling', 'stable') in trend questions are replaced
+      by the first and last numeric values from ground truth trends.
+    - Date tokens match YYYY-MM-DD.
+    """
+    beh = sample.get("expected_behavior", "answer")
+    if beh != "answer":
+        return []
+
+    exp_vals = sample.get("expected_values", [])
+    qtype = sample.get("type")
+    pid = sample.get("patient_id")
+
+    # Replace derived trend words with first and last numeric values
+    if qtype == "trend" or (
+        len(exp_vals) == 1 and exp_vals[0] in ("rising", "falling", "stable")
+    ):
+        gt = (ground_truth_by_pid or {}).get(pid, {})
+        hba1c_list = sorted(
+            gt.get("trends", {}).get("hba1c", []), key=lambda x: x["date"]
+        )
+        if len(hba1c_list) >= 2:
+            tokens = [f"{hba1c_list[0]['value']:g}", f"{hba1c_list[-1]['value']:g}"]
+        else:
+            tokens = exp_vals
+    else:
+        tokens = exp_vals
+
+    res: list[tuple[str, bool]] = []
+    for t in tokens:
+        s = str(t).strip()
+        is_date = bool(DATE_REGEX.match(s))
+        res.append((s, is_date))
+    return res
+
+
+def chunk_satisfies_token(
+    chunk: Chunk,
+    token: str,
+    is_date: bool,
+    files_by_id: dict[str, File] | None = None,
+) -> bool:
+    """Check if a chunk satisfies a target token (either in body text or file date metadata)."""
+    if is_date:
+        if value_matches(token, chunk.text):
+            return True
+        if files_by_id:
+            f = files_by_id.get(chunk.file_id)
+            if (
+                f
+                and f.date
+                and (f.date == token or try_parse_date(f.date) == try_parse_date(token))
+            ):
+                return True
+        return False
+    return value_matches(token, chunk.text)
+
 
 POLICY_FORBIDDEN_DOSE = re.compile(r"\b\d+\s*(?:mg|units?|iu|ml)\b", re.IGNORECASE)
 POLICY_FORBIDDEN_INSTRUCTION = re.compile(
@@ -123,6 +190,9 @@ def evaluate_sample(
     dry_run: bool = False,
     pipeline_name: str = "",
     patient_chunks: list[Chunk] | None = None,
+    files_by_id: dict[str, File] | None = None,
+    ground_truth_by_pid: dict[str, dict[str, Any]] | None = None,
+    chunks_by_id: dict[str, Chunk] | None = None,
 ) -> dict[str, Any]:
     """Calculate evaluation metrics for a single question result."""
     behavior = sample.get("expected_behavior", "answer")
@@ -137,18 +207,12 @@ def evaluate_sample(
 
     metrics: dict[str, Any] = {}
 
-    # 1. Retrieval Recall: Strict (gold_chunk_ids) vs Any Answer-Bearing
+    # 1. Retrieval Recall: Strict (gold_chunk_ids)
     if pipeline_name == "fullchart":
-        # Fullchart sends all chunks within budget; recall is 100% by construction, MRR is N/A
         metrics["recall_strict"] = 1.0
         metrics["retrieval_recall_at_k"] = 1.0
-        metrics["recall_any_answer_bearing"] = (
-            1.0 if (behavior == "answer" and expected_vals) else None
-        )
-        metrics["not_evaluable"] = False
         metrics["mrr"] = None
     else:
-        # Strict recall against annotated gold_chunk_ids
         if gold_chunks:
             has_match = any(g in retrieved for g in gold_chunks)
             metrics["recall_strict"] = 1.0 if has_match else 0.0
@@ -165,27 +229,67 @@ def evaluate_sample(
             metrics["retrieval_recall_at_k"] = None
             metrics["mrr"] = None
 
-        # Any answer-bearing recall: any chunk of the patient containing ALL expected values
-        if behavior == "answer" and expected_vals:
-            if patient_chunks:
-                answer_bearing_cids = [
-                    c.id
-                    for c in patient_chunks
-                    if matches_all_expected_values(expected_vals, c.text)
-                ]
-            else:
-                answer_bearing_cids = []
+    # 2. Old recall_any_answer_bearing (for side-by-side reporting)
+    if behavior == "answer" and expected_vals:
+        p_chunks = patient_chunks or []
+        old_ab_cids = [
+            c.id for c in p_chunks if matches_all_expected_values(expected_vals, c.text)
+        ]
+        if not old_ab_cids:
+            metrics["old_not_evaluable"] = True
+            metrics["recall_any_answer_bearing"] = None
+        else:
+            metrics["old_not_evaluable"] = False
+            has_ab = any(cid in old_ab_cids for cid in retrieved)
+            metrics["recall_any_answer_bearing"] = 1.0 if has_ab else 0.0
+    else:
+        metrics["old_not_evaluable"] = False
+        metrics["recall_any_answer_bearing"] = None
 
-            if not answer_bearing_cids:
-                metrics["not_evaluable"] = True
-                metrics["recall_any_answer_bearing"] = None
-            else:
-                metrics["not_evaluable"] = False
-                has_ab = any(cid in answer_bearing_cids for cid in retrieved)
-                metrics["recall_any_answer_bearing"] = 1.0 if has_ab else 0.0
+    # 3. Evidence Coverage: full_answer_in_one_chunk and union_coverage
+    tokens = extract_evidence_tokens(sample, ground_truth_by_pid)
+    if behavior == "answer" and tokens:
+        p_chunks = patient_chunks or []
+        can_eval = all(
+            any(chunk_satisfies_token(c, t, is_d, files_by_id) for c in p_chunks)
+            for t, is_d in tokens
+        )
+        if not can_eval:
+            metrics["not_evaluable"] = True
+            metrics["full_answer_in_one_chunk"] = None
+            metrics["union_coverage"] = None
         else:
             metrics["not_evaluable"] = False
-            metrics["recall_any_answer_bearing"] = None
+            if pipeline_name == "fullchart":
+                retrieved_objs = p_chunks
+            else:
+                retrieved_objs = [
+                    chunks_by_id[cid]
+                    for cid in retrieved
+                    if chunks_by_id and cid in chunks_by_id
+                ]
+
+            has_single = any(
+                all(
+                    chunk_satisfies_token(c, t, is_d, files_by_id) for t, is_d in tokens
+                )
+                for c in retrieved_objs
+            )
+            metrics["full_answer_in_one_chunk"] = 1.0 if has_single else 0.0
+
+            sat_cnt = sum(
+                1
+                for t, is_d in tokens
+                if any(
+                    chunk_satisfies_token(c, t, is_d, files_by_id)
+                    for c in retrieved_objs
+                )
+            )
+            metrics["union_coverage"] = round(sat_cnt / len(tokens), 4)
+    else:
+        metrics["not_evaluable"] = False
+        metrics["full_answer_in_one_chunk"] = None
+        metrics["union_coverage"] = None
 
     # 2. Answer Correctness & LLM-dependent metrics
     # In dry run, LLM is not invoked. Only deterministic facts answers can be scored.
@@ -239,6 +343,10 @@ def run_pipeline_eval(
     tag: str = "",
 ) -> Path:
     """Run evaluation for a specified pipeline over questions."""
+    import app.rag.pipeline as pipeline_mod
+    from app.rag.verify import extract_numbers, normalize_whitespace
+    from openai import APIStatusError, RateLimitError
+
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     prefix = f"{tag}_" if tag else ""
@@ -247,7 +355,7 @@ def run_pipeline_eval(
     pipeline = RAGPipeline()
     records = []
 
-    # Preload all patient chunks and files for prompt computation & answer-bearing recall
+    # Preload all patient chunks, files, and ground truth
     engine = get_engine()
     with Session(engine) as session:
         all_chunks = list(session.scalars(select(Chunk)))
@@ -261,80 +369,188 @@ def run_pipeline_eval(
 
     files_by_id: dict[str, File] = {f.id: f for f in all_files}
 
+    ground_truth_by_pid: dict[str, dict[str, Any]] = {}
+    for gt_path in Path(ROOT / "data" / "ground_truth").glob("*.json"):
+        with open(gt_path, encoding="utf-8") as f:
+            gt_data = json.load(f)
+            ground_truth_by_pid[gt_data["patient_id"]] = gt_data
+
+    # Hook apply_verifier to capture verifier claims auditing
+    current_audit: dict[str, Any] = {}
+    orig_apply_verifier = pipeline_mod.apply_verifier
+
+    def audited_apply_verifier(
+        patient_id: str,
+        model_response: dict[str, Any],
+        chunks_map: dict[str, Any],
+    ) -> dict[str, Any]:
+        res = orig_apply_verifier(patient_id, model_response, chunks_map)
+        raw_claims = model_response.get("claims", [])
+        kept_claims = res.get("claims", [])
+        removed_info: list[dict[str, Any]] = []
+
+        for cl in raw_claims:
+            cid = cl.get("chunk_id", "")
+            quote = cl.get("quote", "")
+            ctext = cl.get("text", "")
+            chunk = chunks_map.get(cid)
+            if not chunk or getattr(chunk, "patient_id", None) != patient_id:
+                removed_info.append(
+                    {
+                        "claim": cl,
+                        "reason": f"chunk '{cid}' not found or belongs to another patient",
+                    }
+                )
+                continue
+            orig_text = getattr(chunk, "text", "")
+            if not normalize_whitespace(quote) or normalize_whitespace(
+                quote
+            ) not in normalize_whitespace(orig_text):
+                removed_info.append(
+                    {
+                        "claim": cl,
+                        "reason": f"quote '{quote}' not found verbatim in chunk '{cid}'",
+                    }
+                )
+                continue
+            c_nums = extract_numbers(ctext)
+            quote_or_c = f"{quote} {orig_text}"
+            for num in c_nums:
+                pat = r"(?:\b|_)" + re.escape(num) + r"(?:\b|_)"
+                if not re.search(pat, quote_or_c):
+                    removed_info.append(
+                        {
+                            "claim": cl,
+                            "reason": f"number '{num}' in claim not grounded in chunk or quote",
+                        }
+                    )
+                    break
+
+        current_audit["details"] = {
+            "raw_response": model_response,
+            "claims_produced": len(raw_claims),
+            "claims_kept": len(kept_claims),
+            "claims_removed": removed_info,
+        }
+        return res
+
+    pipeline_mod.apply_verifier = audited_apply_verifier
+
     print(
         f"\n[INFO] Starting eval for pipeline='{pipeline_name}' "
         f"(n={len(questions)}, dry_run={dry_run}, tag='{tag}')..."
     )
 
-    for i, q in enumerate(questions, start=1):
-        pid = q["patient_id"]
-        question = q["question"]
-        qtype = q["type"]
-        p_chunks = chunks_by_patient.get(pid, [])
+    consecutive_429 = 0
+    try:
+        for i, q in enumerate(questions, start=1):
+            pid = q["patient_id"]
+            question = q["question"]
+            qtype = q["type"]
+            p_chunks = chunks_by_patient.get(pid, [])
+            current_audit.clear()
 
-        res = pipeline.answer(
-            patient_id=pid,
-            question=question,
-            pipeline_name=pipeline_name,
-            question_type=qtype,
-            dry_run=dry_run,
-        )
-
-        metrics = evaluate_sample(
-            sample=q,
-            result=res,
-            dry_run=dry_run,
-            pipeline_name=pipeline_name,
-            patient_chunks=p_chunks,
-        )
-
-        # Compute real prompt length & estimated tokens for this question
-        retrieved_cids = res.get("retrieved_chunk_ids", [])
-        context_blocks = []
-        for cid in retrieved_cids:
-            chunk_obj = chunks_by_id.get(cid)
-            if chunk_obj:
-                f_obj = files_by_id.get(chunk_obj.file_id)
-                kind = f_obj.kind if f_obj else "doc"
-                date_str = f_obj.date if f_obj and f_obj.date else "undated"
-                context_blocks.append(
-                    f"--- Chunk: {chunk_obj.id} ({kind}, {date_str}, page {chunk_obj.page}) ---\n"
-                    f"{chunk_obj.text}\n"
+            try:
+                res = pipeline.answer(
+                    patient_id=pid,
+                    question=question,
+                    pipeline_name=pipeline_name,
+                    question_type=qtype,
+                    dry_run=dry_run,
                 )
-        context_str = "\n".join(context_blocks)
-        user_msg = (
-            f"Patient ID: {pid}\n\n"
-            f"PATIENT CHUNKS:\n{context_str}\n\n"
-            f"QUESTION: {question}\n\n"
-            "Answer the question following all clinical decision support rules."
-        )
-        prompt_text = SYSTEM_PROMPT + "\n" + user_msg
-        prompt_chars = len(prompt_text)
-        est_prompt_tokens = prompt_chars // 4
+                consecutive_429 = 0
+            except RateLimitError as rle:
+                consecutive_429 += 1
+                headers: dict[str, str] = {}
+                res_obj = getattr(rle, "response", None)
+                if res_obj is not None and hasattr(res_obj, "headers"):
+                    headers = {
+                        k: v
+                        for k, v in dict(res_obj.headers).items()
+                        if any(term in k.lower() for term in ["rate", "limit", "retry"])
+                        and not any(
+                            sec in k.lower()
+                            for sec in ["key", "auth", "token", "secret"]
+                        )
+                    }
+                print(
+                    f"\n[ERROR] 429 RateLimit encountered on question {q['id']} (attempt {consecutive_429}/3)"
+                )
+                print(f"[ERROR] Headers: {headers}")
+                if consecutive_429 >= 3:
+                    print(
+                        "[FATAL] 3 consecutive 429 responses received. Stopping pipeline evaluation immediately."
+                    )
+                    break
+                continue
+            except APIStatusError as ase:
+                print(
+                    f"\n[ERROR] APIStatusError encountered on question {q['id']}: {ase.status_code} - {ase.message}"
+                )
+                print("[FATAL] LLM provider returned error. Stopping live smoke run.")
+                break
 
-        rec = {
-            "question_id": q["id"],
-            "patient_id": pid,
-            "type": qtype,
-            "question": question,
-            "expected_behavior": q.get("expected_behavior"),
-            "expected_values": q.get("expected_values"),
-            "gold_chunk_ids": q.get("gold_chunk_ids"),
-            "retrieved_chunk_ids": res.get("retrieved_chunk_ids", []),
-            "answer": res.get("answer"),
-            "answerable": res.get("answerable"),
-            "citations": res.get("citations", []),
-            "usage": res.get("usage", {}),
-            "latency_ms": res.get("latency_ms", 0),
-            "facts_handled": res.get("facts_handled"),
-            "prompt_chars": prompt_chars,
-            "est_prompt_tokens": est_prompt_tokens,
-            "metrics": metrics,
-        }
-        records.append(rec)
+            metrics = evaluate_sample(
+                sample=q,
+                result=res,
+                dry_run=dry_run,
+                pipeline_name=pipeline_name,
+                patient_chunks=p_chunks,
+                files_by_id=files_by_id,
+                ground_truth_by_pid=ground_truth_by_pid,
+                chunks_by_id=chunks_by_id,
+            )
 
-        if i % 10 == 0 or i == len(questions):
-            print(f"  Processed {i}/{len(questions)} questions...")
+            # Compute real prompt length & estimated tokens for this question
+            retrieved_cids = res.get("retrieved_chunk_ids", [])
+            context_blocks = []
+            for cid in retrieved_cids:
+                chunk_obj = chunks_by_id.get(cid)
+                if chunk_obj:
+                    f_obj = files_by_id.get(chunk_obj.file_id)
+                    kind = f_obj.kind if f_obj else "doc"
+                    date_str = f_obj.date if f_obj and f_obj.date else "undated"
+                    context_blocks.append(
+                        f"--- Chunk: {chunk_obj.id} ({kind}, {date_str}, page {chunk_obj.page}) ---\n"
+                        f"{chunk_obj.text}\n"
+                    )
+            context_str = "\n".join(context_blocks)
+            user_msg = (
+                f"Patient ID: {pid}\n\n"
+                f"PATIENT CHUNKS:\n{context_str}\n\n"
+                f"QUESTION: {question}\n\n"
+                "Answer the question following all clinical decision support rules."
+            )
+            prompt_text = SYSTEM_PROMPT + "\n" + user_msg
+            prompt_chars = len(prompt_text)
+            est_prompt_tokens = prompt_chars // 4
+
+            rec = {
+                "question_id": q["id"],
+                "patient_id": pid,
+                "type": qtype,
+                "question": question,
+                "expected_behavior": q.get("expected_behavior"),
+                "expected_values": q.get("expected_values"),
+                "gold_chunk_ids": q.get("gold_chunk_ids"),
+                "retrieved_chunk_ids": res.get("retrieved_chunk_ids", []),
+                "answer": res.get("answer"),
+                "answerable": res.get("answerable"),
+                "citations": res.get("citations", []),
+                "usage": res.get("usage", {}),
+                "latency_ms": res.get("latency_ms", 0),
+                "facts_handled": res.get("facts_handled"),
+                "verifier": current_audit.get("details", {}),
+                "prompt_chars": prompt_chars,
+                "est_prompt_tokens": est_prompt_tokens,
+                "metrics": metrics,
+            }
+            records.append(rec)
+
+            if i % 10 == 0 or i == len(questions):
+                print(f"  Processed {i}/{len(questions)} questions...")
+    finally:
+        pipeline_mod.apply_verifier = orig_apply_verifier
 
     with open(out_file, "w", encoding="utf-8") as f:
         f.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in records)

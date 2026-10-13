@@ -21,12 +21,13 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.constants import REFUSAL_TEXT
+from app.constants import CROSS_PATIENT_TEXT, DECLINE_POLICY_TEXT, REFUSAL_TEXT
 from app.db import get_engine
 from app.deid import deidentify
 from app.models import Chunk, File
 from app.rag.facts import answer_from_facts, extract_patient_facts
 from app.rag.llm import GroqLLMClient
+from app.rag.policy import is_cross_patient, should_decline_policy
 from app.rag.verify import apply_verifier
 from app.terms.terms import expand_query, normalize_arabic
 
@@ -175,7 +176,33 @@ class RAGPipeline:
         files_map_override: dict[str, File] | None = None,
     ) -> dict[str, Any]:
         """Execute RAG pipeline returning standardized answer response."""
-        start_time = time.time()
+        start_time = time.perf_counter()
+
+        # Deterministic safety guards (before routing, retrieval, or LLM call)
+        if is_cross_patient(question, patient_id):
+            elapsed_ms = round((time.perf_counter() - start_time) * 1000, 1)
+            return {
+                "answer": CROSS_PATIENT_TEXT,
+                "answerable": False,
+                "citations": [],
+                "retrieved_chunk_ids": [],
+                "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+                "latency_ms": elapsed_ms,
+                "facts_handled": False if pipeline_name == "facts" else None,
+            }
+
+        if should_decline_policy(question):
+            elapsed_ms = round((time.perf_counter() - start_time) * 1000, 1)
+            return {
+                "answer": DECLINE_POLICY_TEXT,
+                "answerable": False,
+                "citations": [],
+                "retrieved_chunk_ids": [],
+                "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+                "latency_ms": elapsed_ms,
+                "facts_handled": False if pipeline_name == "facts" else None,
+            }
+
         engine = get_engine()
 
         with Session(engine) as session:
@@ -204,7 +231,7 @@ class RAGPipeline:
                     all_chunks=patient_chunks,
                 )
                 if facts_ans is not None:
-                    facts_ans["latency_ms"] = int((time.time() - start_time) * 1000)
+                    facts_ans["latency_ms"] = round((time.perf_counter() - start_time) * 1000, 1)
                     facts_ans["facts_handled"] = True
                     return facts_ans
                 # Fall back to hybrid_terms if facts table has no answer
@@ -278,7 +305,7 @@ class RAGPipeline:
 
             # 4. DRY RUN (no LLM call)
             if dry_run:
-                elapsed_ms = int((time.time() - start_time) * 1000)
+                elapsed_ms = round((time.perf_counter() - start_time) * 1000, 1)
                 return {
                     "answer": "[DRY RUN] Retrieval completed without LLM call.",
                     "answerable": len(retrieved_chunks) > 0,
@@ -316,7 +343,7 @@ class RAGPipeline:
             # 6. VERIFICATION (pure code against original chunk text)
             verified = apply_verifier(patient_id, raw_resp, chunks_by_id)
 
-            elapsed_ms = int((time.time() - start_time) * 1000)
+            elapsed_ms = round((time.perf_counter() - start_time) * 1000, 1)
             return {
                 "answer": verified["answer"],
                 "answerable": verified["answerable"],

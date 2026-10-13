@@ -6,8 +6,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from . import schemas
-from .constants import REFUSAL_TEXT
+from .constants import CROSS_PATIENT_TEXT, DECLINE_POLICY_TEXT, REFUSAL_TEXT
 from .models import AuditLog, ChatMessage, Chunk, File, Insight, Patient
+from .rag.policy import is_cross_patient, should_decline_policy
 
 
 def _clean_note(note: str | None) -> str | None:
@@ -184,6 +185,36 @@ def _score(a: list[str], b: list[str]) -> float:
 
 def answer_question(db: Session, p: Patient, question: str) -> schemas.ChatAnswer:
     """Fixture chat: only answers questions that exist in the ground truth. Never guesses."""
+    if is_cross_patient(question, p.id):
+        ans = schemas.ChatAnswer(answer=CROSS_PATIENT_TEXT, answerable=False, source=None)
+        db.add(ChatMessage(patient_id=p.id, role="user", content=question))
+        db.add(
+            ChatMessage(
+                patient_id=p.id,
+                role="assistant",
+                content=ans.answer,
+                answerable=ans.answerable,
+                source_chunk_id=None,
+            )
+        )
+        db.commit()
+        return ans
+
+    if should_decline_policy(question):
+        ans = schemas.ChatAnswer(answer=DECLINE_POLICY_TEXT, answerable=False, source=None)
+        db.add(ChatMessage(patient_id=p.id, role="user", content=question))
+        db.add(
+            ChatMessage(
+                patient_id=p.id,
+                role="assistant",
+                content=ans.answer,
+                answerable=ans.answerable,
+                source_chunk_id=None,
+            )
+        )
+        db.commit()
+        return ans
+
     q = _norm(question)
     best, best_score = None, 0.0
     for item in p.chat_questions:

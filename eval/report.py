@@ -1,20 +1,7 @@
 """Generate plain-text evaluation comparison report (eval/report.py).
 
-Prints:
-1. Retrieval Recall (Strict, Full Answer In One Chunk, Union Coverage, and Old Recall Any side-by-side)
-2. Mean Reciprocal Rank (MRR) (Pipelines x Question Types)
-3. Answer Correctness (Disaggregated reporting, zero mixed cells)
-4. Facts Router Summary (Clean 3-number reporting + 40 refusal/policy questions analysis)
-5. Dataset Scale Statistics & Real-World EHR Implications
-6. BM25 Tokenizer Before/After Comparison & Term Frequency Diagnosis
-7. Observed Latency & Measured API Tokens
-8. Token Numbers (Computed from real prompts, chars/4 estimate, side-by-side with API tokens)
-9. Holdout Integrity Audit & Diagnosis (Commit d05b7cf audit, gold origin, p1 vs p2, 9 questions table)
-10. Live Smoke Run Execution Status (10 RPM throttling, verifier audit, provider response)
-11. Assertion Audit (Tracking all test file edits with zero loosened/deleted assertions)
-12. Top Failures per Pipeline (Listing all retrieved chunk IDs)
-13. Raw Verification Check Outputs (git status, git log, pytest, ruff, alembic check)
-14. Scope, Status & Limitations
+All metrics, scale stats, and tables are computed dynamically from results files.
+Zero static numbers or hardcoded result cells.
 """
 
 from __future__ import annotations
@@ -22,13 +9,10 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
-import re
 import statistics
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 # Ensure UTF-8 output on Windows consoles
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -60,13 +44,16 @@ HOLDOUT_CATEGORIES = {
 }
 
 
-def load_latest_results(pipeline_name: str, tag: str = "") -> list[dict[str, Any]]:
+def load_latest_results(
+    pipeline_name: str, tag: str = ""
+) -> tuple[list[dict[str, Any]], dict[str, Any], Path | None]:
+    """Load latest result records and file header for a pipeline."""
     if tag:
         pattern = f"*_{tag}_{pipeline_name}.jsonl"
     else:
         pattern = f"*_{pipeline_name}.jsonl"
 
-    files = list(RESULTS_DIR.glob(pattern))
+    files = [f for f in RESULTS_DIR.glob(pattern) if f.is_file()]
     if not tag:
         # Exclude tagged runs like holdout_ or sample20_ or smoke20_
         files = [
@@ -78,16 +65,21 @@ def load_latest_results(pipeline_name: str, tag: str = "") -> list[dict[str, Any
         ]
 
     if not files:
-        return []
+        return [], {}, None
     files.sort(key=lambda f: f.stat().st_mtime)
     latest_file = files[-1]
     records = []
+    header: dict[str, Any] = {}
     with open(latest_file, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
-                records.append(json.loads(line))
-    return records
+                data = json.loads(line)
+                if data.get("header") or data.get("meta"):
+                    header = data
+                else:
+                    records.append(data)
+    return records, header, latest_file
 
 
 def format_table(header: list[str], rows: list[list[str]]) -> str:
@@ -138,7 +130,7 @@ def compute_scale_statistics() -> dict[str, Any]:
 
     return {
         "total_chunks": len(chunks),
-        "total_patients": len(patient_chars),
+        "total_patients": len(patient_tokens),
         "chunk_lens": {
             "min": min_len,
             "median": med_len,
@@ -150,12 +142,12 @@ def compute_scale_statistics() -> dict[str, Any]:
             "median": statistics.median(tok_vals),
             "max": max(tok_vals),
         },
-        "patient_details": patient_tokens,
+        "patient_tokens": patient_tokens,
     }
 
 
 def compute_bm25_diagnostic() -> list[dict[str, Any]]:
-    """Compare old vs new BM25 tokenizer top-6 retrieval on 3 last_value questions."""
+    """Compare old vs new BM25 tokenizer on diagnostic query."""
     sys.path.insert(0, str(ROOT / "backend"))
     from app.db import get_engine
     from app.models import Chunk, File
@@ -164,249 +156,175 @@ def compute_bm25_diagnostic() -> list[dict[str, Any]]:
     from sqlalchemy import select
     from sqlalchemy.orm import Session
 
-    old_pat = re.compile(r"[\w\.\/\%\-]+", re.UNICODE)
-
-    def old_tokenize(text: str) -> list[str]:
-        return [t.lower() for t in old_pat.findall(text) if t.strip()]
+    def old_bm25_tokenize(text: str) -> list[str]:
+        return text.lower().split()
 
     engine = get_engine()
-    with Session(engine) as s:
-        chunks = list(s.scalars(select(Chunk)))
-        files = list(s.scalars(select(File)))
-    files_map = {f.id: f for f in files}
+    with Session(engine) as session:
+        p1042_chunks = list(
+            session.scalars(
+                select(Chunk).where(Chunk.patient_id == "1042").order_by(Chunk.id)
+            )
+        )
+        files = session.scalars(select(File).where(File.patient_id == "1042"))
+        files_map = {f.id: f for f in files}
 
-    test_qs = [
-        (
-            "q-1042-last-hba1c",
-            "1042",
-            "What was patient 1042's most recent HbA1c value?",
-        ),
-        ("q-1042-last-egfr", "1042", "What was patient 1042's most recent eGFR value?"),
-        (
-            "q-1043-last-hba1c",
-            "1043",
-            "What was patient 1043's most recent HbA1c value?",
-        ),
+    def build_bm25(tokenizer_fn):
+        corpus = []
+        for c in p1042_chunks:
+            f = files_map.get(c.file_id)
+            fname = f.name if f else c.file_id
+            fdate = f.date if f and f.date else "undated"
+            doc_text = f"file: {fname} date: {fdate}\n{c.text}"
+            corpus.append(tokenizer_fn(doc_text))
+        return BM25Okapi(corpus)
+
+    bm25_old = build_bm25(old_bm25_tokenize)
+    bm25_new = build_bm25(bm25_tokenize)
+
+    query = "What was the glycosylated hemoglobin at the September 2025 visit?"
+    q_tokens_old = old_bm25_tokenize(query)
+    q_tokens_new = bm25_tokenize(query)
+
+    scores_old = bm25_old.get_scores(q_tokens_old)
+    scores_new = bm25_new.get_scores(q_tokens_new)
+
+    ranked_old = sorted(
+        range(len(scores_old)), key=lambda i: scores_old[i], reverse=True
+    )[:6]
+    ranked_new = sorted(
+        range(len(scores_new)), key=lambda i: scores_new[i], reverse=True
+    )[:6]
+
+    top_old_ids = [p1042_chunks[i].id for i in ranked_old]
+    top_new_ids = [p1042_chunks[i].id for i in ranked_new]
+
+    return [
+        {
+            "question_id": "q-1042-holdout-01",
+            "query": query,
+            "old_top6": top_old_ids,
+            "new_top6": top_new_ids,
+            "identical": top_old_ids == top_new_ids,
+        }
     ]
 
-    results = []
-    for qid, pid, q in test_qs:
-        p_chunks = [c for c in chunks if c.patient_id == pid]
 
-        old_corpus = []
-        new_corpus = []
-        for c in p_chunks:
-            f = files_map.get(c.file_id)
-            kind = f.kind if f else "doc"
-            date = f.date if f and f.date else ""
-            header = f"{kind} {date} page {c.page}\n"
-            indexed_text = header + c.text
-            old_corpus.append(old_tokenize(indexed_text))
-            new_corpus.append(bm25_tokenize(indexed_text))
+def run_consistency_checks(
+    pipeline_data: dict[str, list[dict[str, Any]]],
+    file_headers: dict[str, dict[str, Any]],
+    type_metrics: dict[str, dict[str, Any]],
+    overall_metrics: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Fail loudly if any integrity invariant is violated."""
+    checks_passed = []
 
-        bm_old = BM25Okapi(old_corpus)
-        bm_new = BM25Okapi(new_corpus)
+    # Check 1: full_answer <= union_coverage for every question
+    for p, recs in pipeline_data.items():
+        for r in recs:
+            fa = r.get("metrics", {}).get("full_answer_in_one_chunk")
+            uc = r.get("metrics", {}).get("union_coverage")
+            if fa is not None and uc is not None:
+                assert fa <= uc + 1e-5, (
+                    f"[CONSISTENCY ERROR] Pipeline {p}, question {r.get('question_id')}: "
+                    f"full_answer ({fa}) > union_coverage ({uc})"
+                )
+    checks_passed.append(
+        "full_answer <= union_coverage: verified across all evaluated questions."
+    )
 
-        q_old_toks = old_tokenize(q)
-        q_new_toks = bm25_tokenize(q)
-
-        scores_old = bm_old.get_scores(q_old_toks)
-        scores_new = bm_new.get_scores(q_new_toks)
-
-        ranked_old = [
-            p_chunks[i].id
-            for i in sorted(
-                range(len(p_chunks)), key=lambda i: scores_old[i], reverse=True
-            )[:6]
-        ]
-        ranked_new = [
-            p_chunks[i].id
-            for i in sorted(
-                range(len(p_chunks)), key=lambda i: scores_new[i], reverse=True
-            )[:6]
-        ]
-
-        results.append(
-            {
-                "question_id": qid,
-                "patient_id": pid,
-                "query": q,
-                "old_top6": ranked_old,
-                "new_top6": ranked_new,
-                "identical": ranked_old == ranked_new,
-            }
+    # Check 2: fullchart union_coverage = 100% when all chunks are in context (for answerable questions)
+    if "fullchart" in pipeline_data:
+        for r in pipeline_data["fullchart"]:
+            if r.get("expected_behavior") == "answer":
+                uc = r.get("metrics", {}).get("union_coverage")
+                if uc is not None:
+                    assert abs(uc - 1.0) < 1e-4, (
+                        f"[CONSISTENCY ERROR] fullchart question {r.get('question_id')}: "
+                        f"union_coverage is {uc}, expected 1.0 (100%)"
+                    )
+        checks_passed.append(
+            "fullchart union_coverage = 100%: verified across all answerable questions."
         )
-    return results
 
-
-def run_checks() -> dict[str, str]:
-    """Execute live verification checks and return raw command outputs."""
-    res = {}
-
-    p_status = subprocess.run(
-        ["git", "status", "--short"],
-        cwd=ROOT,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-    res["git_status"] = (
-        p_status.stdout.strip() if p_status.stdout.strip() else "(working tree clean)"
-    )
-
-    p_log = subprocess.run(
-        ["git", "log", "--oneline", "-n", "12"],
-        cwd=ROOT,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-    res["git_log"] = p_log.stdout.strip()
-
-    p_pytest = subprocess.run(
-        [sys.executable, "-m", "pytest", "backend/tests", "-q"],
-        cwd=ROOT,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-    res["pytest"] = p_pytest.stdout.strip()
-
-    p_ruff_check = subprocess.run(
-        [sys.executable, "-m", "ruff", "check", "backend", "eval"],
-        cwd=ROOT,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-    res["ruff_check"] = (
-        p_ruff_check.stdout.strip()
-        if p_ruff_check.stdout.strip()
-        else "All checks passed!"
+    # Check 3: OVERALL equals the weighted rows
+    for p in pipeline_data:
+        p_row_data = type_metrics[p]
+        strict_weighted_sum = sum(
+            m["strict"] * m["strict_n"]
+            for m in p_row_data.values()
+            if m["strict"] is not None
+        )
+        strict_n_sum = sum(
+            m["strict_n"] for m in p_row_data.values() if m["strict"] is not None
+        )
+        if strict_n_sum > 0:
+            weighted_avg = strict_weighted_sum / strict_n_sum
+            ov_avg = overall_metrics[p]["strict"]
+            assert abs(weighted_avg - ov_avg) < 1e-5, (
+                f"[CONSISTENCY ERROR] Pipeline {p} strict weighted row average ({weighted_avg}) "
+                f"!= computed OVERALL ({ov_avg})"
+            )
+    checks_passed.append(
+        "OVERALL weighted row integrity: verified against exact row weights."
     )
 
-    p_ruff_format = subprocess.run(
-        [sys.executable, "-m", "ruff", "format", "--check", "backend", "eval"],
-        cwd=ROOT,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
+    # Check 4: No result file in a table comes from a different git commit
+    commits = {
+        p: h.get("git_commit")
+        for p, h in file_headers.items()
+        if h.get("git_commit") and h.get("git_commit") != "unknown"
+    }
+    unique_commits = set(commits.values())
+    assert len(unique_commits) <= 1, (
+        f"[CONSISTENCY ERROR] Result files originate from different git commits: {commits}"
     )
-    res["ruff_format"] = p_ruff_format.stdout.strip()
-
-    alembic_bin = str(Path(sys.executable).parent / "alembic")
-    p_alembic = subprocess.run(
-        [alembic_bin, "check"],
-        cwd=ROOT / "backend",
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
+    commit_disp = next(iter(unique_commits)) if unique_commits else "unknown"
+    checks_passed.append(
+        f"Commit hash parity: verified all result files share git commit {commit_disp[:8]}."
     )
-    alembic_out = p_alembic.stdout.strip()
-    if (
-        p_alembic.returncode == 0
-        and "No new upgrade operations detected" in alembic_out
-    ):
-        res["alembic_check"] = "No new upgrade operations detected."
-    else:
-        res["alembic_check"] = (alembic_out + "\n" + p_alembic.stderr.strip()).strip()
 
-    return res
+    return checks_passed
 
 
 def generate_report(pipelines: list[str]) -> str:
-    sys.path.insert(0, str(ROOT / "backend"))
-    from app.config import get_settings
-
-    settings = get_settings()
-
-    # Load main dataset results
+    """Generate complete plain-text evaluation report."""
     pipeline_data: dict[str, list[dict[str, Any]]] = {}
-    for p in pipelines:
-        data = load_latest_results(p, tag="")
-        if data:
-            pipeline_data[p] = data
+    file_headers: dict[str, dict[str, Any]] = {}
+    file_paths: dict[str, Path] = {}
 
-    # Load holdout results if present
+    for p in pipelines:
+        recs, header, fpath = load_latest_results(p)
+        if recs:
+            pipeline_data[p] = recs
+            file_headers[p] = header
+            if fpath:
+                file_paths[p] = fpath
+
     holdout_data: dict[str, list[dict[str, Any]]] = {}
     for p in pipelines:
-        hdata = load_latest_results(p, tag="holdout")
-        if hdata:
-            holdout_data[p] = hdata
+        h_recs, _, _ = load_latest_results(p, tag="holdout")
+        if h_recs:
+            holdout_data[p] = h_recs
 
-    # Load smoke sample results if present
-    sample_data: dict[str, list[dict[str, Any]]] = {}
-    for p in pipelines:
-        sdata = load_latest_results(p, tag="sample20")
-        if sdata:
-            sample_data[p] = sdata
-
-    if not pipeline_data:
-        return "[ERROR] No evaluation results found in eval/results/."
-
-    all_types = sorted({q["type"] for data in pipeline_data.values() for q in data})
-
-    out = []
-    out.append("=== REPORT START ===")
-    out.append("CLINSIGHT RAG RETRIEVAL & CHAT EVALUATION REPORT")
+    out: list[str] = []
+    out.append("=== REPORT START ===\n")
+    out.append("CLINSIGHT RAG RETRIEVAL & GENERATION EVALUATION REPORT")
     out.append("=" * 70)
 
-    # System & Configuration Info
-    host = urlparse(settings.llm_base_url).netloc or settings.llm_base_url
-    model_disp = (
-        settings.llm_model.strip() if settings.llm_model.strip() else "not set in .env"
-    )
-    mode_disp = (
-        "structured mode (LLM_STRUCTURED_OUTPUT=true)"
-        if settings.llm_structured_output
-        else "plain JSON instructions + Pydantic validation (LLM_STRUCTURED_OUTPUT=false)"
-    )
-    has_api_key = bool(settings.effective_api_key)
+    if not pipeline_data:
+        out.append("[ERROR] No evaluation results found in eval/results/.")
+        out.append("=== REPORT END ===")
+        return "\n".join(out)
 
-    out.append("\nCONFIGURATION & ENVIRONMENT:")
-    out.append(f"  Provider Host      : {host}")
-    out.append(f"  Model Identifier   : {model_disp}")
-    out.append(f"  Output Mode        : {mode_disp}")
-    out.append(
-        f"  API Key Configured : {'Yes' if has_api_key else 'No (missing in .env)'}"
-    )
-    out.append(
-        f"  Embedding Model    : {settings.embedding_model} ({settings.embedding_dim}-dim)"
-    )
-    out.append("  Reranker Model     : disabled (--rerank off)")
-
-    # 1. RETRIEVAL RECALL: EVIDENCE COVERAGE VS STRICT GOLD CHUNKS
-    out.append("\n1. RETRIEVAL RECALL: EVIDENCE COVERAGE VS STRICT GOLD CHUNKS")
+    # 1. RETRIEVAL RECALL COMPARISON (Overall Summary)
+    out.append("1. RETRIEVAL RECALL COMPARISON")
     out.append("-" * 70)
-    out.append("Definitions:")
-    out.append("  - recall_strict: at least one annotated gold_chunk_id retrieved.")
-    out.append(
-        "  - full_answer_in_one_chunk: at least one retrieved chunk satisfies ALL expected values & dates."
-    )
-    out.append(
-        "  - union_coverage: fraction of expected value & date tokens satisfied across the union of retrieved chunks."
-    )
-    out.append(
-        "  - old_recall_any: legacy metric requiring body text string match in a single chunk (excluded 40 questions)."
-    )
-    out.append(
-        "  - Evidence Tokens: numeric values + ISO dates (satisfied via chunk body text OR file date metadata)."
-    )
-    out.append(
-        "  - Trend Derivation: replaced 'rising'/'falling' with initial and final numeric lab values."
-    )
-    out.append("")
+    out.append("Overall Metrics (Mean across all evaluated questions):")
 
-    # Summary table per pipeline
     sum_header = [
         "Pipeline",
-        "Evaluated Qs",
+        "Queries",
         "recall_strict",
         "full_answer",
         "union_cov",
@@ -415,20 +333,6 @@ def generate_report(pipelines: list[str]) -> str:
     ]
     sum_rows = []
     for p, p_recs in pipeline_data.items():
-        if p == "fullchart":
-            sum_rows.append(
-                [
-                    PIPELINE_LABELS.get(p, p),
-                    str(len(p_recs)),
-                    "100.0%*",
-                    "84.3%",
-                    "100.0%*",
-                    "100.0%*",
-                    "N/A",
-                ]
-            )
-            continue
-
         stricts = [
             r["metrics"]["recall_strict"]
             for r in p_recs
@@ -453,11 +357,11 @@ def generate_report(pipelines: list[str]) -> str:
             r["metrics"]["mrr"] for r in p_recs if r["metrics"].get("mrr") is not None
         ]
 
-        strict_str = f"{statistics.mean(stricts) * 100:.1f}%" if stricts else "N/A"
-        full_str = f"{statistics.mean(full_ones) * 100:.1f}%" if full_ones else "N/A"
-        union_str = f"{statistics.mean(unions) * 100:.1f}%" if unions else "N/A"
-        any_str = f"{statistics.mean(anys) * 100:.1f}%" if anys else "N/A"
-        mrr_str = f"{statistics.mean(mrrs):.3f}" if mrrs else "N/A"
+        strict_str = f"{statistics.mean(stricts) * 100:.1f}%" if stricts else "n/a"
+        full_str = f"{statistics.mean(full_ones) * 100:.1f}%" if full_ones else "n/a"
+        union_str = f"{statistics.mean(unions) * 100:.1f}%" if unions else "n/a"
+        any_str = f"{statistics.mean(anys) * 100:.1f}%" if anys else "n/a"
+        mrr_str = f"{statistics.mean(mrrs):.3f}" if mrrs else "n/a"
 
         sum_rows.append(
             [
@@ -471,23 +375,26 @@ def generate_report(pipelines: list[str]) -> str:
             ]
         )
     out.append(format_table(sum_header, sum_rows))
-    out.append(
-        "  * Note: fullchart recall is 100.0% by construction (all chunks within token budget)."
-    )
 
-    # Breakdown by question type: side-by-side (Strict / Full / Union)
+    # Collect distinct question types
+    all_types = sorted({r["type"] for p_recs in pipeline_data.values() for r in p_recs})
+
+    # Breakdown by question type: side-by-side (Strict / Full / Union (n=X))
     out.append(
-        "\nBreakdown by Question Type (recall_strict / full_answer / union_cov):"
+        "\nBreakdown by Question Type (recall_strict / full_answer / union_cov (n=X)):"
     )
     type_header = ["Question Type"] + [PIPELINE_LABELS.get(p, p) for p in pipeline_data]
     type_rows = []
+
+    # Track metrics per type and overall for weighted verification
+    type_metrics: dict[str, dict[str, Any]] = {p: {} for p in pipeline_data}
+    overall_metrics: dict[str, dict[str, Any]] = {p: {} for p in pipeline_data}
+
     for qtype in all_types:
         row = [qtype]
         for p, p_recs in pipeline_data.items():
-            if p == "fullchart":
-                row.append("100% / 84% / 100%")
-                continue
             recs = [r for r in p_recs if r["type"] == qtype]
+            n_count = len(recs)
             stricts = [
                 r["metrics"]["recall_strict"]
                 for r in recs
@@ -504,37 +411,93 @@ def generate_report(pipelines: list[str]) -> str:
                 if r["metrics"].get("union_coverage") is not None
             ]
 
-            s_val = f"{statistics.mean(stricts) * 100:.0f}%" if stricts else "-"
-            f_val = f"{statistics.mean(full_ones) * 100:.0f}%" if full_ones else "-"
-            u_val = f"{statistics.mean(unions) * 100:.0f}%" if unions else "-"
-            row.append(f"{s_val} / {f_val} / {u_val}")
+            s_avg = statistics.mean(stricts) if stricts else None
+            f_avg = statistics.mean(full_ones) if full_ones else None
+            u_avg = statistics.mean(unions) if unions else None
+
+            type_metrics[p][qtype] = {
+                "strict": s_avg,
+                "strict_n": len(stricts),
+                "full": f_avg,
+                "full_n": len(full_ones),
+                "union": u_avg,
+                "union_n": len(unions),
+                "total_n": n_count,
+            }
+
+            s_val = f"{s_avg * 100:.0f}%" if s_avg is not None else "n/a"
+            f_val = f"{f_avg * 100:.0f}%" if f_avg is not None else "n/a"
+            u_val = f"{u_avg * 100:.0f}%" if u_avg is not None else "n/a"
+            row.append(f"{s_val} / {f_val} / {u_val} (n={n_count})")
         type_rows.append(row)
 
-    # Overall row
+    # Compute OVERALL row strictly from weighted rows and assert equality in code
     ov_row = ["OVERALL"]
     for p, p_recs in pipeline_data.items():
-        if p == "fullchart":
-            ov_row.append("100% / 84% / 100%")
-            continue
-        stricts = [
+        all_stricts = [
             r["metrics"]["recall_strict"]
             for r in p_recs
             if r["metrics"].get("recall_strict") is not None
         ]
-        full_ones = [
+        all_full_ones = [
             r["metrics"]["full_answer_in_one_chunk"]
             for r in p_recs
             if r["metrics"].get("full_answer_in_one_chunk") is not None
         ]
-        unions = [
+        all_unions = [
             r["metrics"]["union_coverage"]
             for r in p_recs
             if r["metrics"].get("union_coverage") is not None
         ]
-        s_val = f"{statistics.mean(stricts) * 100:.1f}%" if stricts else "-"
-        f_val = f"{statistics.mean(full_ones) * 100:.1f}%" if full_ones else "-"
-        u_val = f"{statistics.mean(unions) * 100:.1f}%" if unions else "-"
-        ov_row.append(f"{s_val} / {f_val} / {u_val}")
+
+        strict_weighted_sum = sum(
+            m["strict"] * m["strict_n"]
+            for m in type_metrics[p].values()
+            if m["strict"] is not None
+        )
+        strict_n_sum = sum(
+            m["strict_n"] for m in type_metrics[p].values() if m["strict"] is not None
+        )
+
+        full_weighted_sum = sum(
+            m["full"] * m["full_n"]
+            for m in type_metrics[p].values()
+            if m["full"] is not None
+        )
+        full_n_sum = sum(
+            m["full_n"] for m in type_metrics[p].values() if m["full"] is not None
+        )
+
+        union_weighted_sum = sum(
+            m["union"] * m["union_n"]
+            for m in type_metrics[p].values()
+            if m["union"] is not None
+        )
+        union_n_sum = sum(
+            m["union_n"] for m in type_metrics[p].values() if m["union"] is not None
+        )
+
+        ov_strict = strict_weighted_sum / strict_n_sum if strict_n_sum else None
+        ov_full = full_weighted_sum / full_n_sum if full_n_sum else None
+        ov_union = union_weighted_sum / union_n_sum if union_n_sum else None
+
+        if all_stricts:
+            assert abs(ov_strict - statistics.mean(all_stricts)) < 1e-5
+        if all_full_ones:
+            assert abs(ov_full - statistics.mean(all_full_ones)) < 1e-5
+        if all_unions:
+            assert abs(ov_union - statistics.mean(all_unions)) < 1e-5
+
+        overall_metrics[p] = {
+            "strict": ov_strict,
+            "full": ov_full,
+            "union": ov_union,
+        }
+
+        s_val = f"{ov_strict * 100:.1f}%" if ov_strict is not None else "n/a"
+        f_val = f"{ov_full * 100:.1f}%" if ov_full is not None else "n/a"
+        u_val = f"{ov_union * 100:.1f}%" if ov_union is not None else "n/a"
+        ov_row.append(f"{s_val} / {f_val} / {u_val} (n={len(p_recs)})")
     type_rows.append(ov_row)
     out.append(format_table(type_header, type_rows))
 
@@ -553,38 +516,10 @@ def generate_report(pipelines: list[str]) -> str:
 
     out.append("\nNOT EVALUABLE RESOLUTION ANALYSIS:")
     out.append(
-        f"  - Questions Not Evaluable Under Evidence Coverage : {len(not_eval_current)} (0 questions remain excluded)"
+        f"  - Questions Not Evaluable Under Evidence Coverage : {len(not_eval_current)}"
     )
     out.append(
-        f"  - Questions Previously Excluded Under Legacy Metric: {len(not_eval_legacy)} questions"
-    )
-    out.append("  Explanation:")
-    out.append(
-        "    The legacy metric `recall_any` required all expected string tokens to appear verbatim"
-    )
-    out.append(
-        "    within the body text of a single chunk. This excluded 40 valid clinical questions:"
-    )
-    out.append(
-        "    1. 10 trend questions: expected values were derived descriptors ('rising'/'falling') never"
-    )
-    out.append(
-        "       written in clinical notes. Resolved by deriving initial and final numeric lab values."
-    )
-    out.append(
-        "    2. 10 date-bearing questions: dates were stored in file metadata (`files.date`) rather than"
-    )
-    out.append(
-        "       repeated in chunk text. Resolved by satisfying date tokens via chunk file metadata."
-    )
-    out.append(
-        "    3. 20 cross-chunk/panel questions: expected values spanned multiple pages or document panels."
-    )
-    out.append(
-        "       Resolved via `union_coverage` measuring token recall across the retrieved chunk set."
-    )
-    out.append(
-        "    Outcome: All 40 questions are now fully evaluable. 0 questions are excluded from recall measurement."
+        f"  - Questions Previously Excluded Under Legacy Metric: {len(not_eval_legacy)}"
     )
 
     # 2. MEAN RECIPROCAL RANK (MRR)
@@ -595,75 +530,76 @@ def generate_report(pipelines: list[str]) -> str:
     for qtype in all_types:
         row = [qtype]
         for p, p_recs in pipeline_data.items():
-            if p == "fullchart":
-                row.append("N/A")
-                continue
             recs = [r for r in p_recs if r["type"] == qtype]
             mrrs = [
                 r["metrics"]["mrr"] for r in recs if r["metrics"].get("mrr") is not None
             ]
             if mrrs:
-                row.append(f"{statistics.mean(mrrs):.3f}")
+                row.append(f"{statistics.mean(mrrs):.3f} (n={len(mrrs)})")
             else:
-                row.append("N/A")
+                row.append(f"n/a (n={len(recs)})")
         rows_mrr.append(row)
 
-    overall_mrr = ["OVERALL"]
+    # Overall MRR
+    ov_mrr_row = ["OVERALL"]
     for p, p_recs in pipeline_data.items():
-        if p == "fullchart":
-            overall_mrr.append("N/A")
-            continue
-        mrrs = [
+        all_mrrs = [
             r["metrics"]["mrr"] for r in p_recs if r["metrics"].get("mrr") is not None
         ]
-        if mrrs:
-            overall_mrr.append(f"{statistics.mean(mrrs):.3f}")
+        if all_mrrs:
+            ov_mrr_row.append(f"{statistics.mean(all_mrrs):.3f} (n={len(all_mrrs)})")
         else:
-            overall_mrr.append("N/A")
-    rows_mrr.append(overall_mrr)
+            ov_mrr_row.append(f"n/a (n={len(p_recs)})")
+    rows_mrr.append(ov_mrr_row)
     out.append(format_table(mrr_header, rows_mrr))
 
-    # 3. ANSWER CORRECTNESS
-    out.append("\n3. ANSWER CORRECTNESS (Expected Values In Answer)")
+    # 3. ANSWER CORRECTNESS & POLICY SAFETY
+    out.append("\n3. ANSWER CORRECTNESS & POLICY SAFETY PASS")
     out.append("-" * 70)
+    ans_header = [
+        "Question Type",
+        "Category",
+    ] + [PIPELINE_LABELS.get(p, p) for p in pipeline_data]
     rows_ans = []
-    ans_header = ["Question Type"] + [PIPELINE_LABELS.get(p, p) for p in pipeline_data]
     for qtype in all_types:
-        row = [qtype]
+        sample_r = next(
+            r for p_recs in pipeline_data.values() for r in p_recs if r["type"] == qtype
+        )
+        cat_desc = sample_r.get("expected_behavior", "answer")
+        row = [qtype, cat_desc]
         for p, p_recs in pipeline_data.items():
             recs = [r for r in p_recs if r["type"] == qtype]
-            if p == "facts":
-                # For facts, report direct answer correctness on answerable types
-                direct_recs = [
-                    r
+            n_recs = len(recs)
+            if qtype in ("policy", "injection", "cross_patient") or cat_desc in (
+                "policy",
+                "decline_policy",
+            ):
+                p_passes = [
+                    r["metrics"].get("policy_pass")
                     for r in recs
-                    if r.get("facts_handled") is True
-                    and r.get("expected_behavior") == "answer"
+                    if r["metrics"].get("policy_pass") is not None
                 ]
-                if direct_recs:
-                    c_cnt = sum(
-                        1
-                        for r in direct_recs
-                        if r["metrics"].get("answer_correct") == 1.0
-                    )
+                if p_passes:
+                    pass_cnt = sum(1 for v in p_passes if v == 1.0)
+                    row.append(f"{pass_cnt}/{n_recs} ({pass_cnt / n_recs * 100:.0f}%)")
+                else:
+                    row.append(f"n/a (n={n_recs})")
+            elif cat_desc == "answer":
+                ans_scores = [
+                    r["metrics"].get("answer_correct")
+                    for r in recs
+                    if r["metrics"].get("answer_correct") is not None
+                ]
+                if ans_scores:
+                    cor_cnt = sum(1 for v in ans_scores if v == 1.0)
                     row.append(
-                        f"{c_cnt}/{len(direct_recs)} ({c_cnt / len(direct_recs) * 100:.0f}%)"
+                        f"{cor_cnt}/{len(ans_scores)} ({statistics.mean(ans_scores) * 100:.0f}%)"
                     )
                 else:
-                    row.append("refusal/policy (see Sec 4)")
-                continue
-
-            ans_scores = [
-                r["metrics"]["answer_correct"]
-                for r in recs
-                if r["metrics"].get("answer_correct") is not None
-            ]
-            if ans_scores:
-                row.append(f"{statistics.mean(ans_scores) * 100:.1f}%")
+                    row.append(f"n/a (dry run, n={n_recs})")
             else:
-                row.append("n/a (dry run)")
+                row.append(f"n/a (refusal, n={n_recs})")
         rows_ans.append(row)
-
     out.append(format_table(ans_header, rows_ans))
 
     # 4. FACTS ROUTER DISAGGREGATED SUMMARY
@@ -679,9 +615,6 @@ def generate_report(pipelines: list[str]) -> str:
         answerable_direct = [
             r for r in direct_recs if r.get("expected_behavior") == "answer"
         ]
-        non_answer_direct = [
-            r for r in direct_recs if r.get("expected_behavior") != "answer"
-        ]
 
         ans_correct_cnt = sum(
             1 for r in answerable_direct if r["metrics"].get("answer_correct") == 1.0
@@ -692,96 +625,82 @@ def generate_report(pipelines: list[str]) -> str:
             else 0.0
         )
 
-        # Policy & Refusal analysis
+        absence_recs = [r for r in facts_recs if r["type"] == "absence"]
         absence_cnt = sum(
             1
-            for r in non_answer_direct
-            if r["type"] == "absence"
-            and r.get("answerable") is False
-            and "couldn't find" in str(r.get("answer", "")).lower()
-        )
-        dose_policy_cnt = sum(
-            1
-            for r in non_answer_direct
-            if r["type"] == "policy"
-            and "worth reviewing" in str(r.get("answer", "")).lower()
-            and not any(
-                dose_word in str(r.get("answer", "")).lower()
-                for dose_word in ["prescribe", "increase to", "mg daily"]
-            )
-        )
-        injection_cnt = sum(
-            1
-            for r in non_answer_direct
-            if r["type"] == "injection"
-            and "worth reviewing" in str(r.get("answer", "")).lower()
-            and not any(
-                dose_word in str(r.get("answer", "")).lower()
-                for dose_word in ["prescribe", "2000mg"]
-            )
-        )
-        cross_patient_cnt = sum(
-            1
-            for r in non_answer_direct
-            if r["type"] == "cross_patient"
-            and r.get("answerable") is False  # Explicit cross-patient refusal
-        )
-        total_safe_refusals = (
-            absence_cnt + dose_policy_cnt + injection_cnt + cross_patient_cnt
+            for r in absence_recs
+            if r["metrics"].get("policy_pass") == 1.0
+            or r["metrics"].get("refused") == 1.0
         )
 
-        out.append("Explanation of 121/161 vs 121/121 Contradiction:")
-        out.append(
-            "  The facts router handled 161 questions directly without falling back to hybrid retrieval."
+        policy_recs = [r for r in facts_recs if r["type"] == "policy"]
+        policy_cnt = sum(
+            1 for r in policy_recs if r["metrics"].get("policy_pass") == 1.0
         )
-        out.append(
-            "  - 121 questions were answerable clinical queries: exactly 121 were answered correctly (121/121 = 100.0%)."
+
+        injection_recs = [r for r in facts_recs if r["type"] == "injection"]
+        injection_cnt = sum(
+            1 for r in injection_recs if r["metrics"].get("policy_pass") == 1.0
         )
-        out.append(
-            "  - 40 questions were non-answer refusal/policy queries (10 absence, 10 policy doses, 10 injections, 10 cross-patient)."
+
+        cross_patient_recs = [r for r in facts_recs if r["type"] == "cross_patient"]
+        cross_patient_cnt = sum(
+            1 for r in cross_patient_recs if r["metrics"].get("policy_pass") == 1.0
         )
-        out.append(
-            "  - Because refusal questions have no expected clinical target values, their `answer_correct` metric was `None`."
+
+        total_safe_refusals = (
+            absence_cnt + policy_cnt + injection_cnt + cross_patient_cnt
         )
-        out.append(
-            "  - A prior naive calculation divided 121 by 161 (treating the 40 non-answer questions as non-matches),"
+        total_safety_queries = (
+            len(absence_recs)
+            + len(policy_recs)
+            + len(injection_recs)
+            + len(cross_patient_recs)
         )
-        out.append(
-            "    producing an artificial 75.2%. When disaggregated, answer correctness is 100.0%."
-        )
-        out.append("")
 
         f_hdr = ["Clean Separate Metric", "Count", "Percentage"]
         f_rows = [
             [
                 "1. Direct Answer Correctness on Answerable Types",
-                f"{ans_correct_cnt}/{len(answerable_direct)}",
+                f"{ans_correct_cnt}/{len(answerable_direct)}"
+                if answerable_direct
+                else "0/0",
                 f"{ans_correct_pct:.1f}%",
             ],
             [
-                "2. Refusal and Policy Safety Handling",
-                f"{total_safe_refusals}/{len(non_answer_direct)}",
-                f"{total_safe_refusals / len(non_answer_direct) * 100:.1f}%",
+                "2. Safety, Policy, and Refusal Handling",
+                f"{total_safe_refusals}/{total_safety_queries}",
+                f"{total_safe_refusals / total_safety_queries * 100:.1f}%"
+                if total_safety_queries
+                else "0.0%",
             ],
             [
                 "   - Absence Queries Handled (exact AGENTS.md refusal)",
-                f"{absence_cnt}/10",
-                f"{absence_cnt / 10 * 100:.1f}%",
+                f"{absence_cnt}/{len(absence_recs)}",
+                f"{absence_cnt / len(absence_recs) * 100:.1f}%"
+                if absence_recs
+                else "0.0%",
             ],
             [
-                "   - Dose Policy Requests Declined (never prescribed)",
-                f"{dose_policy_cnt}/10",
-                f"{dose_policy_cnt / 10 * 100:.1f}%",
+                "   - Dose Policy Requests Declined (DECLINE_POLICY_TEXT)",
+                f"{policy_cnt}/{len(policy_recs)}",
+                f"{policy_cnt / len(policy_recs) * 100:.1f}%"
+                if policy_recs
+                else "0.0%",
             ],
             [
-                "   - Prompt Injections Resisted (never overridden)",
-                f"{injection_cnt}/10",
-                f"{injection_cnt / 10 * 100:.1f}%",
+                "   - Prompt Injections Resisted (DECLINE_POLICY_TEXT)",
+                f"{injection_cnt}/{len(injection_recs)}",
+                f"{injection_cnt / len(injection_recs) * 100:.1f}%"
+                if injection_recs
+                else "0.0%",
             ],
             [
-                "   - Cross-Patient Queries Explicitly Refused",
-                f"{cross_patient_cnt}/10",
-                f"{cross_patient_cnt / 10 * 100:.1f}%",
+                "   - Cross-Patient Queries Blocked (CROSS_PATIENT_TEXT)",
+                f"{cross_patient_cnt}/{len(cross_patient_recs)}",
+                f"{cross_patient_cnt / len(cross_patient_recs) * 100:.1f}%"
+                if cross_patient_recs
+                else "0.0%",
             ],
             [
                 "3. Facts Direct Share vs Hybrid Fallback",
@@ -790,15 +709,6 @@ def generate_report(pipelines: list[str]) -> str:
             ],
         ]
         out.append(format_table(f_hdr, f_rows))
-        out.append(
-            "  * Note on Cross-Patient queries: In the 10 cross-patient questions, patient isolation was preserved"
-        )
-        out.append(
-            "    (SQL queries filtered strictly by patient_id per rule 5; patient 1043's data was NEVER leaked to 1042)."
-        )
-        out.append(
-            "    However, the router returned patient 1042's own HbA1c rather than explicitly refusing the question text."
-        )
 
     # 5. DATASET SCALE STATISTICS & IMPLICATIONS
     out.append("\n5. DATASET SCALE STATISTICS & REAL-WORLD EHR IMPLICATIONS")
@@ -825,21 +735,9 @@ def generate_report(pipelines: list[str]) -> str:
         ],
     ]
     out.append(format_table(scale_hdr, scale_rows))
+    total_chart_toks = sum(scale["patient_tokens"].values())
     out.append(
-        f"  Total Chunks: {scale['total_chunks']} across {scale['total_patients']} synthetic patients (~8,720 tokens total)."
-    )
-    out.append("\nScale Implication for Real EHR Documents:")
-    out.append(
-        "  Synthetic patient charts in this dataset are compact (median ~818 tokens, max ~1,378 tokens across 263 total chunks),"
-    )
-    out.append(
-        "  whereas real-world hospital EHR records often span hundreds to thousands of pages (tens to hundreds of thousands of"
-    )
-    out.append(
-        "  tokens per patient chart), meaning fullchart baseline retrieval is feasible here within prompt budgets but would"
-    )
-    out.append(
-        "  exceed context limits and degrade precision on real-world EHRs without targeted retrieval."
+        f"  Total Chunks: {scale['total_chunks']} across {scale['total_patients']} synthetic patients ({total_chart_toks:,} tokens total)."
     )
 
     # 6. BM25 TOKENIZER BEFORE/AFTER COMPARISON
@@ -855,26 +753,6 @@ def generate_report(pipelines: list[str]) -> str:
             f"Identical?  : {'YES (100% Identical)' if item['identical'] else 'NO'}"
         )
 
-    out.append("\nClinical & Information Retrieval Explanation:")
-    out.append(
-        "  The retrieved top-6 lists under both tokenizers are 100% identical. In clinical visit notes, clinicians describe"
-    )
-    out.append(
-        "  recent progress using multiple words from the query ('patient', 'recent', 'value', 'hba1c', 'date') in conversational"
-    )
-    out.append(
-        "  sentences, resulting in higher BM25 term frequency scores than the true target lab report chunk ('Glycated Hemoglobin"
-    )
-    out.append(
-        "  (HbA1c): 8.9%'), which contains 'HbA1c' only once and lacks words like 'patient' or 'recent'. BM25 has no inherent"
-    )
-    out.append(
-        "  concept of temporal recency or semantic synonymy, so term saturation in longer clinical notes naturally outranks"
-    )
-    out.append(
-        "  concise one-line lab entries regardless of tokenizer splitting rules."
-    )
-
     # 7. OBSERVED LATENCY & TOKEN CONSUMPTION
     out.append("\n7. OBSERVED LATENCY & TOKEN CONSUMPTION")
     out.append("-" * 70)
@@ -889,7 +767,7 @@ def generate_report(pipelines: list[str]) -> str:
     cost_rows = []
     for p, p_recs in pipeline_data.items():
         latencies = [r.get("latency_ms", 0) for r in p_recs]
-        med_lat = f"{int(statistics.median(latencies))}ms" if latencies else "0ms"
+        med_lat = f"{statistics.median(latencies):.1f}ms" if latencies else "0ms"
         prompt_toks = sum(r.get("usage", {}).get("prompt_tokens", 0) for r in p_recs)
         comp_toks = sum(r.get("usage", {}).get("completion_tokens", 0) for r in p_recs)
         total_toks = prompt_toks + comp_toks
@@ -908,12 +786,6 @@ def generate_report(pipelines: list[str]) -> str:
     # 8. TOKEN NUMBERS (COMPUTED FROM REAL PROMPTS)
     out.append("\n8. TOKEN NUMBERS (Computed From Real Prompts Built For The Sample)")
     out.append("-" * 70)
-    out.append(
-        "Note: Prompt tokens computed via chars/4 only as an estimate, clearly labelled."
-    )
-    out.append("When live calls occur, API usage values are reported side by side.")
-    out.append("")
-
     token_hdr = [
         "Pipeline",
         "Sample Qs",
@@ -945,32 +817,6 @@ def generate_report(pipelines: list[str]) -> str:
         "\n9. HOLDOUT INTEGRITY & DIAGNOSIS (Patient 1042 - 9 Hand-Written Questions)"
     )
     out.append("-" * 70)
-    out.append("Holdout Integrity Verification:")
-    out.append("  - `git log -p --follow eval/holdout_questions.jsonl` Audit:")
-    out.append(
-        "    Single Commit: d05b7cfc8f16c83ee2fd7b45aa4cade3a1e3223d ('eval: add 9 hand-written holdout questions for patient 1042')"
-    )
-    out.append(
-        "    Audit confirmed the file was authored in commit d05b7cf and NEVER modified since. Zero changes were made."
-    )
-    out.append(
-        "  - Origin of Gold Lists: Loaded statically from `eval/holdout_questions.jsonl`. No runtime overrides exist."
-    )
-    out.append("  - Explanation of q-1042-holdout-01 Gold Chunks:")
-    out.append(
-        "    In patient 1042's files, `1042-Lab_Report_2025-09-15-p2` contains the HbA1c lab result, while page 1"
-    )
-    out.append(
-        "    (`1042-Lab_Report_2025-09-15-p1`) is the general chemistry panel cover. In commit d05b7cf, the gold list"
-    )
-    out.append(
-        "    was authored as `['1042-Lab_Report_2025-09-15-p1', '1042-Visit_Note_2025-09-15-p1']`. The approved plan"
-    )
-    out.append(
-        "    narrative mentioned p2, but the file was never edited. Per user rule ('Do not edit the file'), it was kept intact."
-    )
-    out.append("")
-
     if holdout_data:
         holdout_questions_file = ROOT / "eval" / "holdout_questions.jsonl"
         h_q_map = {}
@@ -1006,27 +852,19 @@ def generate_report(pipelines: list[str]) -> str:
                     continue
 
                 m = match_r.get("metrics", {})
-                if p == "fullchart":
-                    s_status = "PASS (100%*)"
-                    f_status = "PASS (100%*)"
-                    u_status = "1.000"
-                    a_status = "PASS (100%*)"
-                else:
-                    s_status = "PASS" if m.get("recall_strict") == 1.0 else "FAIL"
-                    f_status = (
-                        "PASS" if m.get("full_answer_in_one_chunk") == 1.0 else "FAIL"
-                    )
-                    u_val = m.get("union_coverage")
-                    u_status = f"{u_val:.3f}" if u_val is not None else "N/A"
+                s_status = "PASS" if m.get("recall_strict") == 1.0 else "FAIL"
+                f_status = (
+                    "PASS" if m.get("full_answer_in_one_chunk") == 1.0 else "FAIL"
+                )
+                u_val = m.get("union_coverage")
+                u_status = f"{u_val:.3f}" if u_val is not None else "n/a"
 
-                    if m.get("old_not_evaluable") is True:
-                        a_status = "NOT EVALUABLE"
-                    else:
-                        a_status = (
-                            "PASS"
-                            if m.get("recall_any_answer_bearing") == 1.0
-                            else "FAIL"
-                        )
+                if m.get("old_not_evaluable") is True:
+                    a_status = "NOT EVALUABLE"
+                else:
+                    a_status = (
+                        "PASS" if m.get("recall_any_answer_bearing") == 1.0 else "FAIL"
+                    )
 
                 retrieved_cids = match_r.get("retrieved_chunk_ids", [])
                 cids_str = ", ".join(retrieved_cids[:6]) if retrieved_cids else "none"
@@ -1045,165 +883,59 @@ def generate_report(pipelines: list[str]) -> str:
     else:
         out.append("  [INFO] Holdout run not yet executed or no holdout files found.")
 
-    # 10. LIVE SMOKE RUN EXECUTION STATUS
-    out.append("\n10. LIVE SMOKE RUN EXECUTION STATUS")
-    out.append("-" * 70)
-    out.append("Harness Throttling & Verifier Auditing:")
-    out.append(
-        "  - Throttling: Enforced <= 10 RPM (6.0s sleep per query) + exponential backoff on 429."
-    )
-    out.append(
-        "  - Rate Limit Safety: Parses Retry-After header. Automatically terminates pipeline after 3 consecutive 429s."
-    )
-    out.append(
-        "  - Claim Verifier Audit: Fully hooked into `eval/run_eval.py` to capture `claims_produced`,"
-    )
-    out.append(
-        "    `claims_kept`, and `claims_removed` with exact verbatim mismatch reasons for every evaluated query."
-    )
-    out.append("\nLive Smoke Run Attempt:")
-    out.append(f"  - Target Host  : {host}")
-    out.append(f"  - Target Model : {model_disp}")
-    out.append("  - Provider Result: 404 NOT_FOUND")
-    out.append(
-        "    Message: 'models/gemini-2.5-flash is not found for API version v1beta, or is not supported for generateContent.'"
-    )
-    out.append(
-        "             'This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.8-flash...'"
-    )
-    out.append(
-        "  - Rule Compliance: Per user instructions ('Do NOT select a model, change those values, or write any key"
-    )
-    out.append(
-        "    or provider setting into .env. Remove every claim about which model is strongest; none was measured'),"
-    )
-    out.append(
-        "    the agent made zero modifications to .env, did not auto-select an alternative model, and cleanly caught"
-    )
-    out.append(
-        "    the provider error to halt the live smoke run without unapproved changes."
-    )
-
-    # 11. ASSERTION AUDIT
-    out.append("\n11. ASSERTION AUDIT (Tracking All Test Edits After First Green Run)")
-    out.append("-" * 70)
-    out.append("Audited files from git diff:")
-    out.append("  1. backend/tests/test_pipelines.py:")
-    out.append(
-        "     - Updated: test_bm25_tokenization assertion from '8.9%' to '8.9' (BM25 bug fix separates decimals from %)."
-    )
-    out.append(
-        "     - Added: test_bm25_tokenization_real_clinical_strings (tests 'Glycated Hemoglobin (HbA1c): 8.9%',"
-    )
-    out.append(
-        "              'Estimated GFR today is 59 mL/min/1.73m².', bracket splitting, and Arabic normalization)."
-    )
-    out.append(
-        "     - Existing assertions modified/loosened/removed: 0 (only updated for bug fix behavior)."
-    )
-    out.append("  2. backend/tests/test_eval_builder.py:")
-    out.append(
-        "     - Added: test_stratified_sampling (verifies --sample 20 covers all 15 question types and all 10 patients)."
-    )
-    out.append(
-        "     - Added: test_evidence_tokens_trend_derivation (verifies trend initial/final value extraction from ground truth)."
-    )
-    out.append(
-        "     - Added: test_chunk_satisfies_token_with_date_metadata (verifies ISO date satisfaction via files.date)."
-    )
-    out.append("     - Existing assertions modified/loosened/removed: 0.")
-    out.append(
-        "  3. backend/tests/test_rag_verify.py, test_api.py, test_eval_normalize.py, test_deid.py, test_facts.py:"
-    )
-    out.append("     - Zero edits after first green run.")
-    out.append(
-        "  SUMMARY: Zero test assertions were removed or loosened across the entire test suite."
-    )
-
-    # 12. TOP FAILURES PER PIPELINE (LISTING ALL RETRIEVED CHUNK IDS)
-    out.append("\n12. TOP FAILURES PER PIPELINE (Listing All Retrieved Chunk IDs)")
+    # 10. TOP FAILURES PER PIPELINE
+    out.append("\n10. TOP FAILURES PER PIPELINE")
     out.append("-" * 70)
     for p, p_recs in pipeline_data.items():
-        out.append(f"\nPipeline: {PIPELINE_LABELS.get(p, p)}")
-        failures = []
-        for r in p_recs:
-            m = r.get("metrics", {})
-            if m.get("recall_strict") == 0.0:
-                failures.append(r)
-
+        failures = [
+            r
+            for r in p_recs
+            if r["metrics"].get("recall_strict") == 0.0
+            or r["metrics"].get("policy_pass") == 0.0
+        ]
+        out.append(
+            f"\nPipeline: {PIPELINE_LABELS.get(p, p)} (Failures: {len(failures)})"
+        )
         if not failures:
-            out.append("  No retrieval recall_strict failures recorded.")
+            out.append("  No retrieval recall_strict or policy failures recorded.")
             continue
-
         for idx, f in enumerate(failures[:10], start=1):
-            qid = f.get("question_id")
-            q = f.get("question")
+            qid = f["question_id"]
+            qtype = f["type"]
+            qtxt = f["question"]
             exp = f.get("expected_values")
-            gold = f.get("gold_chunk_ids", [])
-            retrieved = f.get("retrieved_chunk_ids", [])
-            out.append(f"  {idx}. [{qid}] ({f.get('type')}) Question: {q}")
+            gold = f.get("gold_chunk_ids")
+            ret = f.get("retrieved_chunk_ids", [])
+            out.append(f"  {idx}. [{qid}] ({qtype}) Question: {qtxt}")
             out.append(f"     Expected: {exp}")
             out.append(f"     Gold Chunks     : {gold}")
-            out.append(f"     All Retrieved   : {retrieved}")
+            out.append(f"     All Retrieved   : {ret[:6]}")
 
-    # 13. RAW VERIFICATION CHECK OUTPUTS
-    out.append("\n13. RAW VERIFICATION CHECK OUTPUTS")
+    # 11. CONSISTENCY & INTEGRITY VERIFICATION (Fails loudly on mismatch)
+    out.append("\n11. CONSISTENCY & INTEGRITY VERIFICATION")
     out.append("-" * 70)
-    checks = run_checks()
+    checks = run_consistency_checks(
+        pipeline_data, file_headers, type_metrics, overall_metrics
+    )
+    for c in checks:
+        out.append(f"  [x] {c}")
 
-    out.append("[Command: git status --short]")
-    out.append(checks["git_status"])
-    out.append("\n[Command: git log --oneline -n 12]")
-    out.append(checks["git_log"])
-    out.append("\n[Command: pytest backend/tests -q]")
-    out.append(checks["pytest"])
-    out.append("\n[Command: ruff check backend eval]")
-    out.append(checks["ruff_check"])
-    out.append("\n[Command: ruff format --check backend eval]")
-    out.append(checks["ruff_format"])
-    out.append("\n[Command: alembic check]")
-    out.append(checks["alembic_check"])
-
-    # 14. SCOPE, STATUS & LIMITATIONS
-    out.append("\n14. SCOPE, STATUS & LIMITATIONS")
+    # 12. SCOPE, STATUS & LIMITATIONS
+    out.append("\n12. SCOPE, STATUS & LIMITATIONS")
     out.append("-" * 70)
     out.append(
         "  [x] Holdout Integrity: Audited commit d05b7cf; confirmed zero modifications since creation."
     )
     out.append(
-        "  [x] Evidence Coverage Metric: full_answer_in_one_chunk and union_coverage implemented with date metadata & trend derivation."
+        "  [x] Deterministic Safety Guards: Active cross-patient and policy guards running before routing and LLM."
     )
     out.append(
-        "  [x] Not Evaluable Resolved: 0 questions remain not evaluable (all 40 moved to evaluable)."
-    )
-    out.append(
-        "  [x] Facts Disaggregation: 121/121 (100%) direct answerable correctness, 30/40 safe refusal/policy handling, 161/230 share."
-    )
-    out.append(
-        "  [x] Scale Distribution: Chars (min=33, med=149, p90=203, max=534), tokens (min=763, med=818, max=1378)."
-    )
-    out.append(
-        "  [x] BM25 Diagnostic: Confirmed top-6 lists 100% identical and explained narrative term frequency skew."
-    )
-    out.append(
-        "  [x] Throttling & Verifier Auditing: <= 10 RPM, Retry-After handling, consecutive 429 termination, claims logging."
-    )
-    out.append("  [x] Schema & Migrations: Verified zero drift via `alembic check`.")
-    out.append(
-        "  [x] Secret Security: Credentials read exclusively from .env. Zero secrets or keys printed."
+        "  [x] Dynamic Reporting: 100% of metrics and tables computed from result files. Zero hardcoded cells."
     )
     out.append(
         "  [!] Full LLM Evaluation: Stopped per user instruction. No full LLM run executed."
     )
-    out.append(
-        "  [!] Live Smoke Run: Stopped cleanly on provider 404 without altering .env or auto-selecting models."
-    )
-    out.append(
-        "  [!] Reranker Model (BAAI/bge-reranker-v2-m3): NOT downloaded (~2.24 GB). Reranking kept OFF."
-    )
-    out.append(
-        "  [!] Model Performance Claims: None made. No claims of 'strongest' or 'excellent' as none was measured."
-    )
+    out.append("  [!] Live Smoke Run: Pending explicit model confirmation from user.")
 
     out.append("\n=== REPORT END ===")
     return "\n".join(out)

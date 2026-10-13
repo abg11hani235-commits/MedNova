@@ -1,1 +1,1 @@
-"""Clinsight backend application package."""
+"""Rafiq backend application package."""

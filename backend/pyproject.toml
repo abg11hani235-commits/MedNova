@@ -3,10 +3,11 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "clinsight-backend"
+name = "rafiq-backend"
 version = "0.1.0"
-description = "Clinsight clinical decision-support FastAPI backend"
+description = "Rafiq nutrition follow-up FastAPI backend"
 readme = "README.md"
+
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.110.0",

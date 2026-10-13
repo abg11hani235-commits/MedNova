@@ -13,7 +13,7 @@ from .db import get_db
 from .models import AuditLog, Chunk, File, Insight, Patient
 
 router = APIRouter()
-DEFAULT_ACTOR = "DR (Doctor)"
+DEFAULT_ACTOR = "NS (Nutrition Specialist)"
 
 
 def actor_header(x_actor: str | None = Header(default=None)) -> str:

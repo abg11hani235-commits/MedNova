@@ -11,8 +11,9 @@ FIXED_PDF_TIMESTAMP: time.struct_time = time.strptime(
 )
 
 
-# Exact refusal text mandated by AGENTS.md Rule 3 and evaluation spec (straight apostrophe)
-REFUSAL_TEXT: str = "I couldn't find this in the patient's files."
+# Canonical refusal text in Ask Rafiq (Arabic)
+REFUSAL_TEXT: str = "المعلومة دي مش موجودة في ملف المريض."
+
 
 # Allowed planted finding categories
 PLANTED_FINDING_TYPES: list[str] = [

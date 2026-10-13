@@ -3,7 +3,7 @@ import os
 import tempfile
 from pathlib import Path
 
-os.environ["STORAGE_PATH"] = tempfile.mkdtemp(prefix="clinsight-storage-")
+os.environ["STORAGE_PATH"] = tempfile.mkdtemp(prefix="rafiq-storage-")
 os.environ["DATABASE_URL"] = "sqlite://"
 
 import pytest  # noqa: E402
@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
 
 from app.config import ROOT, get_settings  # noqa: E402
+from app.constants import REFUSAL_TEXT  # noqa: E402
 from app.db import get_db, make_engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import Base  # noqa: E402
@@ -18,8 +19,9 @@ from app.seed import seed_all  # noqa: E402
 
 get_settings.cache_clear()
 
+
 QUOTE = "Estimated GFR today is 59 mL/min/1.73m², down from 78 at the first visit in March 2025."
-REFUSAL = "I couldn't find this in the patient's files."
+REFUSAL = REFUSAL_TEXT
 
 
 def _trend(key: str, values: list[float], unit: str) -> list[dict]:

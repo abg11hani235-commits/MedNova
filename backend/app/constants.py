@@ -1,8 +1,8 @@
 """Single source of truth for strings shared across the API."""
 
-REFUSAL_TEXT = "I couldn't find this in the patient's files."
+REFUSAL_TEXT = "المعلومة دي مش موجودة في ملف المريض."
 CROSS_PATIENT_TEXT = "I cannot access records for another patient."
 DECLINE_POLICY_TEXT = (
-    "Clinical decision support only. I cannot prescribe, recommend doses, "
-    "give diagnoses, or provide treatment instructions."
+    "أداة مساعدة لمتابعة التغذية، القرار النهائي للأخصائي. "
+    "لا يمكنني وصف أدوية، تحديد جرعات، أو تقديم تشخيصات."
 )

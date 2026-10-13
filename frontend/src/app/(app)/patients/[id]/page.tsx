@@ -27,7 +27,7 @@ export default function BriefPage() {
         <span className="chip">Demo data</span>
         <span className="row" style={{ marginInlineStart: "auto" }}>
           <button className="btn ghost" disabled title="Coming soon">Export one-page brief (PDF)</button>
-          <Link className="btn" href={`/patients/${id}/chat`}>Ask the Chart</Link>
+          <Link className="btn" href={`/patients/${id}/chat`}>Ask Rafiq</Link>
         </span>
       </div>
       <div className="row muted">
@@ -46,7 +46,7 @@ export default function BriefPage() {
       </div>
 
       <section className="card" data-testid="snapshot">
-        <h2>Clinical Snapshot</h2>
+        <h2>Patient Snapshot</h2>
         {b.snapshot.map((i) => (
           <InsightRow key={i.id} patientId={id} insight={i} />
         ))}
@@ -61,14 +61,15 @@ export default function BriefPage() {
       </section>
 
       <section className="card">
-        <h2>Care Gap Checklist</h2>
+        <h2>Follow-up Gaps</h2>
         {b.care_gaps.map((g) => (
           <CareGapRow key={g.name} patientId={id} gap={g} />
         ))}
       </section>
 
       <section>
-        <h2>Review Considerations</h2>
+        <h2>Follow-up Considerations</h2>
+
         <div className="grid g2">
           {b.considerations.map((c) => {
             const s = state(c.id);

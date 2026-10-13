@@ -19,20 +19,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <header className="top">
-        <Link href="/patients" aria-label="Clinsight home">
+        <Link href="/patients" aria-label="Rafiq home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo/clinsight-logo.svg" alt="Clinsight" height={26} style={{ height: 26, width: "auto" }} />
+          <img src="/logo/rafiq-logo.svg" alt="Rafiq" height={26} style={{ height: 26, width: "auto" }} />
         </Link>
         <input className="search" placeholder="Search patients" aria-label="Search patients" />
-        <span className="av" aria-label="Signed in as doctor">DR</span>
+        <span className="av" aria-label="Signed in as nutrition specialist">NS</span>
       </header>
       <nav className="side" aria-label="Main">
         {item("/patients", "Patients", true)}
         {id ? item(`/patients/${id}`, "Patient Brief", true) : <span className="disabled">Patient Brief</span>}
-        {id ? item(`/patients/${id}/chat`, "Ask the Chart") : <span className="disabled">Ask the Chart</span>}
+        {id ? item(`/patients/${id}/chat`, "Ask Rafiq") : <span className="disabled">Ask Rafiq</span>}
         {item("/upload", "Upload")}
         {item("/privacy", "Privacy & Audit")}
       </nav>
+
       <main className="main">{children}</main>
     </div>
   );

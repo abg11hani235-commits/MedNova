@@ -1,4 +1,5 @@
 export const DISCLAIMER =
-  "Clinical decision support only. Verify findings against the patient record and current clinical guidance. Not a substitute for clinical judgment.";
+  "أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic.";
 
-export const REFUSAL_TEXT = "I couldn't find this in the patient's files.";
+export const REFUSAL_TEXT = "المعلومة دي مش موجودة في ملف المريض.";
+

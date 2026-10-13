@@ -45,7 +45,7 @@ export default function ChatPage() {
   return (
     <>
       <div className="row">
-        <h1>Ask the Chart</h1>
+        <h1>Ask Rafiq</h1>
         <span className="chip">Answers come only from this patient&apos;s files</span>
       </div>
       <div className="grid" style={{ gridTemplateColumns: "1fr 420px" }}>
@@ -69,7 +69,7 @@ export default function ChatPage() {
                 <ChatBubble
                   key={i}
                   variant={m.answerable ? "assistant" : "not-found"}
-                  extra={m.source ? <SourceChip patientId={id} source={m.source} /> : m.answerable === false ? <span className="muted">Nothing was inferred or guessed.</span> : null}
+                  extra={m.source ? <SourceChip patientId={id} source={m.source} /> : m.answerable === false ? <span className="muted" dir="auto">Nothing was inferred or guessed.</span> : null}
                 >
                   {m.text}
                 </ChatBubble>
@@ -77,9 +77,10 @@ export default function ChatPage() {
             )}
           </div>
           <form className="chat-input" onSubmit={onSubmit}>
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask about this patient's chart" aria-label="Question" />
+            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask Rafiq about this patient's files" aria-label="Question" dir="auto" />
             <button className="btn" type="submit" disabled={chat.isPending}>Ask</button>
           </form>
+
         </section>
       </div>
     </>

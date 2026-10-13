@@ -111,7 +111,8 @@ const audit: AuditEntry[] = [
   { time: "2026-06-18T09:31:00Z", actor: "Clinic admin", action: "upload", patient_id: "1046" },
 ];
 const log = (action: string, patient_id: string | null) =>
-  audit.unshift({ time: new Date().toISOString(), actor: "DR (Doctor)", action, patient_id });
+  audit.unshift({ time: new Date().toISOString(), actor: "NS (Nutrition Specialist)", action, patient_id });
+
 
 export const mockApi: Api = {
   async listPatients() {

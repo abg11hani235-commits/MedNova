@@ -1,0 +1,6 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rafiq">
+  <rect width="64" height="64" rx="18" fill="#1F4E79"/>
+  <rect x="14" y="14" width="36" height="36" rx="10" fill="#0E7C86"/>
+  <circle cx="32" cy="32" r="8" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="32" cy="32" r="2.5" fill="#FFFFFF"/>
+</svg>

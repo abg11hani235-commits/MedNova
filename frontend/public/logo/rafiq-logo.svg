@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="56" viewBox="0 0 240 56" role="img" aria-label="Rafiq">
+  <rect width="36" height="36" x="10" y="10" rx="10" fill="#0E7C86"/>
+  <circle cx="28" cy="28" r="8" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="28" cy="28" r="2.5" fill="#FFFFFF"/>
+  <text x="56" y="36" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="700" fill="#1F4E79" letter-spacing="-0.5">Rafiq</text>
+</svg>

@@ -84,7 +84,7 @@ describe("TrendChart niceTicks", () => {
 });
 
 describe("AppShell", () => {
-  it("with the pathname mocked as /patients/1042/chat, only 'Ask the Chart' has aria-current='page'", () => {
+  it("with the pathname mocked as /patients/1042/chat, only 'Ask Rafiq' has aria-current='page'", () => {
     mockPathname = "/patients/1042/chat";
     render(
       <AppShell>
@@ -95,7 +95,8 @@ describe("AppShell", () => {
       .getAllByRole("link")
       .filter((el) => el.getAttribute("aria-current") === "page");
     expect(activeLinks).toHaveLength(1);
-    expect(activeLinks[0]).toHaveTextContent("Ask the Chart");
+    expect(activeLinks[0]).toHaveTextContent("Ask Rafiq");
   });
 });
+
 

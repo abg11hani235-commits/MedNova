@@ -5,9 +5,10 @@ const CLS: Record<Variant, string> = { user: "u", assistant: "a", "not-found": "
 
 export function ChatBubble({ variant, children, extra }: { variant: Variant; children: ReactNode; extra?: ReactNode }) {
   return (
-    <div className={`bub ${CLS[variant]}`} data-variant={variant}>
+    <div className={`bub ${CLS[variant]}`} data-variant={variant} dir="auto">
       {children}
       {extra && <div style={{ marginTop: 6 }}>{extra}</div>}
     </div>
   );
 }
+

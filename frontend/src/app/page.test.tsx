@@ -3,9 +3,10 @@ import { render, screen } from "@testing-library/react";
 import HomePage from "./page";
 
 describe("HomePage", () => {
-  it("renders Clinsight title", () => {
+  it("renders Rafiq title", () => {
     render(<HomePage />);
-    const headings = screen.getAllByText("Clinsight");
+    const headings = screen.getAllByText("Rafiq");
     expect(headings.length).toBeGreaterThan(0);
   });
+
 });

@@ -1,5 +1,6 @@
 {
-  "name": "clinsight-monorepo",
+  "name": "rafiq-monorepo",
+
   "version": "0.1.0",
   "private": true,
   "description": "Decision-support web app for diabetes clinicians - repository workspace",

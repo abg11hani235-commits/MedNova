@@ -1,6 +1,7 @@
-# Clinsight API contract v0
+# Rafiq API contract v0
 
 Shared by the backend and frontend. Change it only through a pull request that both sides review.
+
 
 ## Types
 

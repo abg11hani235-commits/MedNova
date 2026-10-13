@@ -1,6 +1,7 @@
-# Contributing to Clinsight
+# Contributing to Rafiq
 
-Thank you for contributing to Clinsight. This project is a clinical decision-support tool for diabetes doctors and adheres to strict safety, privacy, and engineering guidelines.
+Thank you for contributing to Rafiq. This project is a follow-up support layer for diabetes nutrition specialists in Egypt and adheres to strict safety, privacy, and engineering guidelines.
+
 
 ---
 

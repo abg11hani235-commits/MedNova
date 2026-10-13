@@ -1,15 +1,15 @@
-# Clinsight Product Overview
+# Rafiq Product Overview
 
-Clinsight is a clinical decision-support web application designed specifically for diabetes physicians and endocrinologists. It synthesizes complex, fragmented electronic patient charts into an interactive, high-yield one-page brief where every clinical finding is transparently linked directly to its exact source text in the patient's records. Clinsight also provides a grounded "Ask the Chart" assistant that strictly answers clinician questions using only verified data from the patient's own files, significantly accelerating chart review while eliminating unsupported assumptions and hallucination risks.
+Rafiq is a SaaS layer on top of a patient file for nutrition specialists in Egypt. Tagline: "Every finding, traced to its source." The specialist opens a patient and gets a one-page brief before the visit; every sentence links to the original place in the file. The demo stays focused on diabetes nutrition follow-up (HbA1c, glucose, creatinine, eGFR, UACR, lipids, weight), with synthetic data only. Rafiq supports the specialist's judgment. It does not diagnose, prescribe, set medication or supplement doses, or tell anyone what to do.
 
 ---
 
-# Clinsight project rules (all agents and contributors must follow)
+# Rafiq project rules (all agents and contributors must follow)
 
 ## Product safety (never break these)
-1. Clinsight is decision support only. Never output a diagnosis, a drug dose, or an instruction to the clinician. Use wording like "worth reviewing".
+1. Rafiq supports specialist judgment only. Never output a diagnosis, a drug dose, or a directive instruction. Use wording like "worth reviewing".
 2. Every insight must carry a source: document name, page, and the quoted text. No source means the insight must not be shown.
-3. If the answer is not in the patient's files, reply exactly: "I couldn't find this in the patient's files." Never guess or infer.
+3. If the answer is not in the patient's files, reply exactly: "المعلومة دي مش موجودة في ملف المريض." Never guess or infer.
 4. Numbers (trends, ranges, care gaps) are computed by deterministic code rules, never by the LLM. The LLM only summarizes and answers from retrieved text.
 5. Each patient's data is isolated: every query is filtered by patient_id. A question must never retrieve another patient's chunks.
 6. Personal identifiers are removed before any text is sent to an LLM.
@@ -23,7 +23,8 @@ Clinsight is a clinical decision-support web application designed specifically f
 10. The UI follows /design exactly: tokens, components, spacing, copy. Do not invent new colors or fonts.
 11. Severity is always icon + text + color, never color alone.
 12. Use CSS logical properties so RTL (Arabic) works. Keep medical terms (HbA1c, eGFR) in Latin characters inside Arabic text.
-13. Always keep this footer on every screen: "Clinical decision support only. Verify findings against the patient record and current clinical guidance. Not a substitute for clinical judgment."
+13. Always keep this footer on every screen: "أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic."
+
 
 ## Engineering
 14. Work on your own branch. Small tasks, small commits. Never push to main.

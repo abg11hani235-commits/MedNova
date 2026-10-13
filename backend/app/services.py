@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from . import schemas
 from .constants import CROSS_PATIENT_TEXT, DECLINE_POLICY_TEXT, REFUSAL_TEXT
 from .models import AuditLog, ChatMessage, Chunk, File, Insight, Patient
+from .nutrition_rules import evaluate_meal_log_gap
 from .rag.policy import is_cross_patient, should_decline_policy
 
 
@@ -144,6 +145,22 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
                 status=g.get("status", "missing"),
                 detail=_clean_detail(g.get("evidence") or g.get("absence_note") or ""),
                 source=sources.get(ins.id) if ins else None,
+            )
+        )
+    # Check for meal log gap only if meal-log source is enabled / present
+    meal_log_source_present = any(f.kind == "meal_log" or "meal" in f.name.lower() for f in files)
+    meal_gap = evaluate_meal_log_gap(
+        as_of_date=p.as_of_date,
+        meal_log_enabled=meal_log_source_present,
+        meal_logs=None,
+    )
+    if meal_gap is not None:
+        gaps.append(
+            schemas.CareGap(
+                name=meal_gap["name"],
+                status=meal_gap["status"],
+                detail=meal_gap["detail"],
+                source=None,
             )
         )
     return schemas.Brief(

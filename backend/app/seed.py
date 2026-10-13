@@ -57,7 +57,11 @@ def why_for(ftype: str, trends: dict, meds: list[str]) -> str:
         last = ", ".join(f"{v:g}" for v in hba1c[-3:])
         return f"Last three HbA1c results: {last}."
     if ftype == "falling_egfr" and len(egfr) >= 2:
-        extra = " Metformin is listed as ongoing." if "Metformin" in meds else ""
+        extra = (
+            " Metformin is listed as ongoing (نقطة تستحق المراجعة مع الطبيب المعالج)."
+            if "Metformin" in meds
+            else ""
+        )
         return f"eGFR went from {egfr[0]:g} to {egfr[-1]:g} across the visits.{extra}"
     return {
         "missing_uacr": (

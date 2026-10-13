@@ -11,8 +11,8 @@ FIXED_PDF_TIMESTAMP: time.struct_time = time.strptime(
 )
 
 
-# Canonical refusal text in Ask Rafiq (Arabic)
-REFUSAL_TEXT: str = "المعلومة دي مش موجودة في ملف المريض."
+# Canonical refusal text in synthetic dataset
+REFUSAL_TEXT: str = "I couldn't find this in the patient's files."
 
 
 # Allowed planted finding categories

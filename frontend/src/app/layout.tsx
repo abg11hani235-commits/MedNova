@@ -3,7 +3,7 @@ import { IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
 import "./globals.css";
-import "./clinsight.css";
+import "./rafiq.css";
 import { DISCLAIMER } from "../lib/constants";
 import { Providers } from "./providers";
 

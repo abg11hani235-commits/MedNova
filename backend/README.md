@@ -1,6 +1,6 @@
-# Clinsight Backend
+# Rafiq Backend
 
-FastAPI decision-support service for Clinsight.
+FastAPI decision-support service for Rafiq.
 
 ## Local Setup
 ```bash

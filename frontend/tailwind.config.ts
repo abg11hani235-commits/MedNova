@@ -10,6 +10,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        rafiq: {
+          navy: "#1F4E79",
+          teal: "#0E7C86",
+          bg: "#F7FAFB",
+          text: "#1A2B3C",
+          muted: "#5B6B7A",
+          border: "#DDE5EA",
+          surface: "#FFFFFF",
+        },
         clinsight: {
           navy: "#1F4E79",
           teal: "#0E7C86",

@@ -5,12 +5,22 @@ Idempotent: re-seeding a patient replaces that patient's rows.
 
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from .models import ChatMessage, Chunk, File, Insight, Patient
+from .models import (
+    ChatMessage,
+    Chunk,
+    File,
+    Insight,
+    MealItem,
+    MealLog,
+    Patient,
+    PatientChatMessage,
+)
 
 PAGE_RE = re.compile(r"^=== PAGE (\d+) ===[ \t]*$", re.M)
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
@@ -161,6 +171,71 @@ def seed_patient(db: Session, pid: str, gt: dict, text_dir: Path) -> None:
     db.commit()
 
 
+def seed_meals(db: Session, seed_file: Path) -> int:
+    """Seed synthetic meal logs and patient chat messages from separate file."""
+    if not seed_file.exists():
+        return 0
+    data = json.loads(seed_file.read_text(encoding="utf-8"))
+    count = 0
+    for pid, logs in data.get("patients", {}).items():
+        existing_log_ids = db.scalars(select(MealLog.id).where(MealLog.patient_id == pid)).all()
+        if existing_log_ids:
+            db.execute(delete(MealItem).where(MealItem.meal_log_id.in_(existing_log_ids)))
+            db.execute(delete(PatientChatMessage).where(PatientChatMessage.patient_id == pid))
+            db.execute(delete(MealLog).where(MealLog.patient_id == pid))
+
+        for ml_data in logs:
+            dt_str = ml_data.get("logged_at")
+            logged_at = datetime.fromisoformat(dt_str) if dt_str else datetime.now()
+            ml = MealLog(
+                id=ml_data.get("id"),
+                patient_id=pid,
+                local_date=ml_data.get("local_date"),
+                logged_at=logged_at,
+                meal_type=ml_data.get("meal_type", "unspecified"),
+                raw_text=ml_data.get("raw_text", ""),
+                status=ml_data.get("status", "parsed"),
+                clarification_question=ml_data.get("clarification_question"),
+                clarification_options=ml_data.get("clarification_options"),
+                safety_flag=ml_data.get("safety_flag"),
+            )
+            db.add(ml)
+            db.flush()
+
+            db.add(
+                PatientChatMessage(
+                    patient_id=pid,
+                    meal_log_id=ml.id,
+                    role="patient",
+                    content=ml.raw_text,
+                    created_at=logged_at,
+                )
+            )
+
+            for item_data in ml_data.get("items", []):
+                mi = MealItem(
+                    meal_log_id=ml.id,
+                    food_id=item_data["food_id"],
+                    food_name_ar=item_data.get("food_name_ar", ""),
+                    food_name_en=item_data.get("food_name_en", ""),
+                    quantity=float(item_data.get("quantity", 1.0)),
+                    unit=item_data.get("unit", "حصة"),
+                    grams=float(item_data.get("grams", 100.0)),
+                    kcal=float(item_data.get("kcal", 0.0)),
+                    protein_g=float(item_data.get("protein_g", 0.0)),
+                    carbs_g=float(item_data.get("carbs_g", 0.0)),
+                    fat_g=float(item_data.get("fat_g", 0.0)),
+                    fiber_g=float(item_data.get("fiber_g", 0.0)),
+                    match_method=item_data.get("match_method", "seed_exact"),
+                    match_score=float(item_data.get("match_score", 1.0)),
+                    confirmed=bool(item_data.get("confirmed", True)),
+                )
+                db.add(mi)
+            count += 1
+    db.commit()
+    return count
+
+
 def seed_all(db: Session, data_dir: Path) -> list[str]:
     ids = []
     for gt_path in sorted((data_dir / "ground_truth").glob("*.json")):
@@ -168,4 +243,6 @@ def seed_all(db: Session, data_dir: Path) -> list[str]:
         gt = json.loads(gt_path.read_text(encoding="utf-8"))
         seed_patient(db, pid, gt, data_dir / "synthetic" / pid)
         ids.append(pid)
+
+    seed_meals(db, data_dir / "seed_meals.json")
     return ids

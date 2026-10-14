@@ -1,0 +1,322 @@
+{
+  "version": "1.0",
+  "timezone": "Africa/Cairo",
+  "source_note": "Synthetic Egyptian meal logs for Rafiq demo. Nutrients computed deterministically using data/foods_eg.json.",
+  "patients": {
+    "1042": [
+      {
+        "id": "ml-1042-01",
+        "local_date": "2026-06-16",
+        "logged_at": "2026-06-16T08:30:00+03:00",
+        "meal_type": "breakfast",
+        "raw_text": "رغيف عيش بلدي وبيضتين مسلوقين",
+        "status": "parsed",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": null,
+        "items": [
+          {
+            "food_id": "food-aish-baladi",
+            "food_name_ar": "عيش بلدي",
+            "food_name_en": "Baladi Bread",
+            "quantity": 1.0,
+            "unit": "رغيف",
+            "grams": 90.0,
+            "kcal": 247.5,
+            "protein_g": 7.7,
+            "carbs_g": 43.7,
+            "fat_g": 2.3,
+            "fiber_g": 4.1,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          },
+          {
+            "food_id": "food-egg-boiled",
+            "food_name_ar": "بيض مسلوق",
+            "food_name_en": "Boiled Egg",
+            "quantity": 2.0,
+            "unit": "بيضة",
+            "grams": 100.0,
+            "kcal": 155.0,
+            "protein_g": 12.6,
+            "carbs_g": 0.8,
+            "fat_g": 11.5,
+            "fiber_g": 0.7,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          }
+        ]
+      },
+      {
+        "id": "ml-1042-02",
+        "local_date": "2026-06-16",
+        "logged_at": "2026-06-16T14:15:00+03:00",
+        "meal_type": "lunch",
+        "raw_text": "طبق كشري صغير وسلطة خضرا",
+        "status": "parsed",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": null,
+        "items": [
+          {
+            "food_id": "food-koshari",
+            "food_name_ar": "كشري مصري",
+            "food_name_en": "Egyptian Koshari",
+            "quantity": 1.0,
+            "unit": "طبق صغير",
+            "grams": 250.0,
+            "kcal": 412.5,
+            "protein_g": 14.5,
+            "carbs_g": 72.5,
+            "fat_g": 7.5,
+            "fiber_g": 8.8,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          },
+          {
+            "food_id": "food-green-salad",
+            "food_name_ar": "سلطة خضراء بلدي",
+            "food_name_en": "Egyptian Green Salad",
+            "quantity": 1.0,
+            "unit": "طبق",
+            "grams": 150.0,
+            "kcal": 37.5,
+            "protein_g": 1.8,
+            "carbs_g": 6.3,
+            "fat_g": 0.5,
+            "fiber_g": 2.7,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          }
+        ]
+      },
+      {
+        "id": "ml-1042-03",
+        "local_date": "2026-06-17",
+        "logged_at": "2026-06-17T13:45:00+03:00",
+        "meal_type": "lunch",
+        "raw_text": "أكلت كشري",
+        "status": "needs_clarification",
+        "clarification_question": "أكلت قد إيه من كشري مصري؟",
+        "clarification_options": [
+          {
+            "label": "طبق صغير (250 جم)",
+            "food_id": "food-koshari",
+            "quantity": 1.0,
+            "unit": "طبق صغير",
+            "grams": 250.0
+          },
+          {
+            "label": "طبق وسط (350 جم)",
+            "food_id": "food-koshari",
+            "quantity": 1.0,
+            "unit": "طبق وسط",
+            "grams": 350.0
+          },
+          {
+            "label": "طبق كبير (500 جم)",
+            "food_id": "food-koshari",
+            "quantity": 1.0,
+            "unit": "طبق كبير",
+            "grams": 500.0
+          }
+        ],
+        "safety_flag": null,
+        "items": []
+      },
+      {
+        "id": "ml-1042-04",
+        "local_date": "2026-06-17",
+        "logged_at": "2026-06-17T17:20:00+03:00",
+        "meal_type": "snack",
+        "raw_text": "اديني دايت بلان للتخسيس وكام كالوري في اليوم؟",
+        "status": "rejected",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": "policy_decline",
+        "items": []
+      },
+      {
+        "id": "ml-1042-05",
+        "local_date": "2026-06-18",
+        "logged_at": "2026-06-18T13:30:00+03:00",
+        "meal_type": "lunch",
+        "raw_text": "صدر فرخة مشوية ورغيف عيش بلدي",
+        "status": "parsed",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": null,
+        "items": [
+          {
+            "food_id": "food-chicken-breast-grilled",
+            "food_name_ar": "صدر دجاج مشوي",
+            "food_name_en": "Grilled Chicken Breast",
+            "quantity": 1.0,
+            "unit": "صدر",
+            "grams": 120.0,
+            "kcal": 198.0,
+            "protein_g": 37.2,
+            "carbs_g": 0.0,
+            "fat_g": 4.3,
+            "fiber_g": 0.0,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          },
+          {
+            "food_id": "food-aish-baladi",
+            "food_name_ar": "عيش بلدي",
+            "food_name_en": "Baladi Bread",
+            "quantity": 1.0,
+            "unit": "رغيف",
+            "grams": 90.0,
+            "kcal": 247.5,
+            "protein_g": 7.7,
+            "carbs_g": 43.7,
+            "fat_g": 2.3,
+            "fiber_g": 4.1,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          }
+        ]
+      },
+      {
+        "id": "ml-1042-06",
+        "local_date": "2026-06-18",
+        "logged_at": "2026-06-18T22:15:00+03:00",
+        "meal_type": "dinner",
+        "raw_text": "حاسس بهبوط حاد ودوخة وعرق وسكري 45",
+        "status": "emergency",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": "emergency_symptom",
+        "items": []
+      }
+    ],
+    "1043": [
+      {
+        "id": "ml-1043-01",
+        "local_date": "2026-06-01",
+        "logged_at": "2026-06-01T09:00:00+03:00",
+        "meal_type": "breakfast",
+        "raw_text": "رغيف عيش بلدي و4 معالق فول",
+        "status": "parsed",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": null,
+        "items": [
+          {
+            "food_id": "food-aish-baladi",
+            "food_name_ar": "عيش بلدي",
+            "food_name_en": "Baladi Bread",
+            "quantity": 1.0,
+            "unit": "رغيف",
+            "grams": 90.0,
+            "kcal": 247.5,
+            "protein_g": 7.7,
+            "carbs_g": 43.7,
+            "fat_g": 2.3,
+            "fiber_g": 4.1,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          },
+          {
+            "food_id": "food-foul-medames",
+            "food_name_ar": "فول مدمس",
+            "food_name_en": "Foul Medames",
+            "quantity": 4.0,
+            "unit": "معلقة",
+            "grams": 60.0,
+            "kcal": 66.0,
+            "protein_g": 4.6,
+            "carbs_g": 10.8,
+            "fat_g": 0.5,
+            "fiber_g": 3.6,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          }
+        ]
+      },
+      {
+        "id": "ml-1043-02",
+        "local_date": "2026-06-01",
+        "logged_at": "2026-06-01T20:30:00+03:00",
+        "meal_type": "dinner",
+        "raw_text": "أكلت زعبلوطة مع تيكيتيكي",
+        "status": "unknown_food",
+        "clarification_question": "الأكلة دي مش موجودة في قاعدة بيانات الأطعمة المصرية. تقدر توضح مكوناتها أو تختار بديل مقارب؟",
+        "clarification_options": [],
+        "safety_flag": null,
+        "items": []
+      },
+      {
+        "id": "ml-1043-03",
+        "local_date": "2026-06-02",
+        "logged_at": "2026-06-02T14:00:00+03:00",
+        "meal_type": "lunch",
+        "raw_text": "طبق ملوخية مع رغيف عيش بلدي وربع فرخة مسلوقة",
+        "status": "parsed",
+        "clarification_question": null,
+        "clarification_options": null,
+        "safety_flag": null,
+        "items": [
+          {
+            "food_id": "food-molokhia",
+            "food_name_ar": "ملوخية",
+            "food_name_en": "Molokhia Soup",
+            "quantity": 1.0,
+            "unit": "طبق",
+            "grams": 200.0,
+            "kcal": 86.0,
+            "protein_g": 3.8,
+            "carbs_g": 8.4,
+            "fat_g": 4.2,
+            "fiber_g": 2.2,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          },
+          {
+            "food_id": "food-aish-baladi",
+            "food_name_ar": "عيش بلدي",
+            "food_name_en": "Baladi Bread",
+            "quantity": 1.0,
+            "unit": "رغيف",
+            "grams": 90.0,
+            "kcal": 247.5,
+            "protein_g": 7.7,
+            "carbs_g": 43.7,
+            "fat_g": 2.3,
+            "fiber_g": 4.1,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          },
+          {
+            "food_id": "food-chicken-boiled",
+            "food_name_ar": "دجاج مسلوق",
+            "food_name_en": "Boiled Chicken",
+            "quantity": 1.0,
+            "unit": "ربع فرخة",
+            "grams": 150.0,
+            "kcal": 285.0,
+            "protein_g": 40.5,
+            "carbs_g": 0.0,
+            "fat_g": 12.8,
+            "fiber_g": 0.0,
+            "match_method": "exact_alias",
+            "match_score": 1.0,
+            "confirmed": true
+          }
+        ]
+      }
+    ]
+  }
+}

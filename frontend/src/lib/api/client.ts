@@ -28,6 +28,36 @@ const realApi: Api = {
     return http(`/patients/${id}/files`, { method: "POST", body: form });
   },
   audit: () => http("/audit"),
+  postPatientMealChat: (id, message, mealType = "snack", actorHeader) =>
+    http(`/patients/${id}/meals/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Actor": actorHeader || `PT ${id}`,
+      },
+      body: JSON.stringify({ message, meal_type: mealType }),
+    }),
+  clarifyMeal: (id, mealLogId, selectedOption, actorHeader) =>
+    http(`/patients/${id}/meals/${mealLogId}/clarify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Actor": actorHeader || `PT ${id}`,
+      },
+      body: JSON.stringify({ selected_option: selectedOption }),
+    }),
+  getMealHistory: (id, actorHeader) =>
+    http(`/patients/${id}/meals/history`, {
+      headers: {
+        "X-Actor": actorHeader || `PT ${id}`,
+      },
+    }),
+  getDailyMealSummary: (id, date, actorHeader) =>
+    http(`/patients/${id}/meals/daily-summary${date ? `?date=${date}` : ""}`, {
+      headers: {
+        "X-Actor": actorHeader || `PT ${id}`,
+      },
+    }),
 };
 
 export const isMockMode = !BASE;

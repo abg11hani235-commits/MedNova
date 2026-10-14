@@ -15,6 +15,21 @@ Insight = { id,
             absence_note: string | null,
             review_state: "none" | "reviewed",
             feedback: "none" | "helpful" | "not_helpful" }
+
+MealItem = { id, food_id, food_name_ar, food_name_en, quantity, unit,
+             grams, kcal, protein_g, carbs_g, fat_g, fiber_g,
+             match_method, match_score, confirmed, source_food_row? }
+
+MealLog  = { id, patient_id, local_date, logged_at, meal_type, raw_text,
+             status: "parsed" | "needs_clarification" | "unknown_food" | "rejected" | "emergency",
+             clarification_question: string | null, clarification_options: object[] | null,
+             safety_flag: string | null, items: MealItem[], total_kcal, total_carbs_g,
+             total_protein_g, total_fat_g, total_fiber_g, is_estimated }
+
+DailyMealSummary = { date, meal_count, total_kcal, total_carbs_g, total_protein_g,
+                     total_fat_g, total_fiber_g, is_estimated, meals: MealLog[] }
+
+MealSection = { has_logs: boolean, recent_days: DailyMealSummary[], note: string | null }
 ~~~
 
 Rules that apply to every endpoint:
@@ -22,6 +37,10 @@ Rules that apply to every endpoint:
 - An insight with no `source` must carry an `absence_note` (for example "No record in 14 files").
 - Wording is "worth reviewing". Never a diagnosis, dose or instruction.
 - Every patient-scoped query is filtered by `patient_id`. A chunk of patient A requested through patient B returns 404.
+- `X-Actor` Header: This is a demo context tag, NOT real authentication.
+  - On patient meal routes (`/patients/{id}/meals/*`), default-deny is enforced: requests without `X-Actor` are rejected with 403.
+  - Patient actors (`PT <pid>`) receive 403 on specialist routes (brief, audit, other patients).
+  - Specialist actors (`NS`) can view meal history and daily summaries.
 
 ## Endpoints
 
@@ -40,7 +59,8 @@ Rules that apply to every endpoint:
      trends: { hba1c: { target: { min, max }, points: [{ date, label, value }] },
                egfr:  { target: { min, max }, points: [{ date, label, value }] } },
      care_gaps: [{ name, status: "done" | "overdue" | "missing", detail, source: Source | null }],
-     considerations: [{ id, severity, statement, why, source: Source | null }] }
+     considerations: [{ id, severity, statement, why, source: Source | null }],
+     meals: MealSection | null }               // present when meal logs exist
 ~~~
 
 ### GET /patients/{id}/sources/{chunk_id}
@@ -74,6 +94,39 @@ body: { action: "reviewed" | "helpful" | "not_helpful" }
 ~~~
 multipart/form-data
 -> { file_id, status: "queued" }
+~~~
+
+### POST /patients/{id}/meals/chat
+~~~
+header: X-Actor: "PT <id>"
+body: { message: string, meal_type?: string }
+-> { status: "parsed" | "needs_clarification" | "unknown_food" | "rejected" | "emergency" | "record_lookup",
+     reply: string,
+     meal_log: MealLog | null,
+     clarification_options?: object[] | null,
+     safety_flag?: string | null,
+     is_estimated: boolean,
+     disclaimer: string }
+~~~
+
+### POST /patients/{id}/meals/{meal_log_id}/clarify
+~~~
+header: X-Actor: "PT <id>"
+body: { selected_option?: object, free_text?: string }
+-> MealLog
+~~~
+
+### GET /patients/{id}/meals/history
+~~~
+header: X-Actor: "PT <id>" or "NS"
+-> MealLog[]
+~~~
+
+### GET /patients/{id}/meals/daily-summary
+~~~
+header: X-Actor: "PT <id>" or "NS"
+query: ?date=YYYY-MM-DD (optional, defaults to Cairo today)
+-> DailyMealSummary
 ~~~
 
 ### GET /audit

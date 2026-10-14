@@ -4,7 +4,10 @@ import type {
   AuditEntry,
   Brief,
   ChatAnswer,
+  DailyMealSummary,
   Feedback,
+  MealLog,
+  PatientChatResponse,
   PatientSummary,
   ReviewState,
   Source,
@@ -79,6 +82,92 @@ const BRIEF_1042: Brief = {
     { id: "1042-F1", severity: "urgent_review", statement: "Kidney function trend alongside current medication is worth reviewing.", why: "eGFR fell from 78 to 59, and Metformin is listed as ongoing.", source: S.nephro },
     { id: "1042-F2", severity: "review", statement: "HbA1c rising across 3 consecutive visits. Worth reviewing the current treatment plan.", why: "Last three results were 8.4, 8.7 and 8.9.", source: S.lab },
   ],
+  meals: {
+    has_logs: true,
+    recent_days: [
+      {
+        date: "2026-06-18",
+        meal_count: 2,
+        total_kcal: 685.0,
+        total_carbs_g: 94.0,
+        total_protein_g: 28.5,
+        total_fat_g: 21.0,
+        total_fiber_g: 9.5,
+        is_estimated: true,
+        meals: [
+          {
+            id: "ml-1042-01",
+            patient_id: "1042",
+            local_date: "2026-06-18",
+            logged_at: "2026-06-18T08:30:00Z",
+            meal_type: "breakfast",
+            raw_text: "رغيف عيش بلدي وبيضتين مسلوقين",
+            status: "parsed",
+            clarification_question: null,
+            clarification_options: null,
+            safety_flag: null,
+            total_kcal: 402.5,
+            total_carbs_g: 44.5,
+            total_protein_g: 20.3,
+            total_fat_g: 13.8,
+            total_fiber_g: 4.8,
+            is_estimated: true,
+            items: [
+              {
+                id: "mi-1",
+                food_id: "food-aish-baladi",
+                food_name_ar: "عيش بلدي",
+                food_name_en: "Baladi Bread",
+                quantity: 1,
+                unit: "رغيف",
+                grams: 90,
+                kcal: 247.5,
+                protein_g: 7.7,
+                carbs_g: 43.7,
+                fat_g: 2.3,
+                fiber_g: 4.1,
+                match_method: "exact_alias",
+                match_score: 1.0,
+                confirmed: true,
+                source_food_row: {
+                  id: "food-aish-baladi",
+                  name_ar: "عيش بلدي",
+                  name_en: "Baladi Bread",
+                  verified: false,
+                  source: "author estimate, unverified",
+                },
+              },
+              {
+                id: "mi-2",
+                food_id: "food-egg-boiled",
+                food_name_ar: "بيض مسلوق",
+                food_name_en: "Boiled Egg",
+                quantity: 2,
+                unit: "بيضة",
+                grams: 100,
+                kcal: 155.0,
+                protein_g: 12.6,
+                carbs_g: 0.8,
+                fat_g: 11.5,
+                fiber_g: 0.7,
+                match_method: "exact_alias",
+                match_score: 1.0,
+                confirmed: true,
+                source_food_row: {
+                  id: "food-egg-boiled",
+                  name_ar: "بيض مسلوق",
+                  name_en: "Boiled Egg",
+                  verified: false,
+                  source: "author estimate, unverified",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    note: "تقديري: محسوب بناءً على جدول الأطعمة المصرية التجريبي",
+  },
 };
 
 const PATIENTS: PatientSummary[] = [
@@ -106,8 +195,8 @@ const norm = (s: string) => s.toLowerCase().replace(/[^\w\s]/g, "").replace(/\s+
 
 const reviewState = new Map<string, { review_state: ReviewState; feedback: Feedback }>();
 const audit: AuditEntry[] = [
-  { time: "2026-06-18T09:12:00Z", actor: "DR (Doctor)", action: "view_brief", patient_id: "1042" },
-  { time: "2026-06-18T09:14:00Z", actor: "DR (Doctor)", action: "view_source", patient_id: "1042" },
+  { time: "2026-06-18T09:12:00Z", actor: "NS (Nutrition Specialist)", action: "view_brief", patient_id: "1042" },
+  { time: "2026-06-18T09:14:00Z", actor: "NS (Nutrition Specialist)", action: "view_source", patient_id: "1042" },
   { time: "2026-06-18T09:31:00Z", actor: "Clinic admin", action: "upload", patient_id: "1046" },
 ];
 const log = (action: string, patient_id: string | null) =>
@@ -176,5 +265,44 @@ export const mockApi: Api = {
   async audit() {
     await wait();
     return [...audit];
+  },
+  async postPatientMealChat(id, message, mealType = "snack"): Promise<PatientChatResponse> {
+    await wait();
+    log("patient_chat_message", id);
+    const mockLog = BRIEF_1042.meals?.recent_days[0]?.meals[0] as MealLog;
+    return {
+      status: "parsed",
+      reply: `سجلتلك: عيش بلدي (1 رغيف)، بيض مسلوق (2 بيضة). إجمالي السعرات: 402 سعر حراري (تقديري). ألف صحة وهنا!`,
+      meal_log: mockLog,
+      is_estimated: true,
+      disclaimer: "أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic.",
+    };
+  },
+  async clarifyMeal(id, _mealLogId, _selectedOption): Promise<MealLog> {
+    await wait();
+    log("clarify_meal", id);
+    return BRIEF_1042.meals?.recent_days[0]?.meals[0] as MealLog;
+  },
+  async getMealHistory(id): Promise<MealLog[]> {
+    await wait();
+    log("view_meal_history", id);
+    return BRIEF_1042.meals?.recent_days.flatMap((d) => d.meals) ?? [];
+  },
+  async getDailyMealSummary(id, _date): Promise<DailyMealSummary> {
+    await wait();
+    log("view_meal_daily_summary", id);
+    return (
+      BRIEF_1042.meals?.recent_days[0] ?? {
+        date: "2026-06-18",
+        meal_count: 0,
+        total_kcal: 0,
+        total_carbs_g: 0,
+        total_protein_g: 0,
+        total_fat_g: 0,
+        total_fiber_g: 0,
+        is_estimated: true,
+        meals: [],
+      }
+    );
   },
 };

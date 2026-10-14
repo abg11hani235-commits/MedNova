@@ -60,6 +60,63 @@ export interface Consideration {
   source: Source | null;
 }
 
+export interface MealItem {
+  id: string;
+  food_id: string;
+  food_name_ar: string;
+  food_name_en: string;
+  quantity: number;
+  unit: string;
+  grams: number;
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  match_method: string;
+  match_score: number;
+  confirmed: boolean;
+  source_food_row?: Record<string, unknown> | null;
+}
+
+export interface MealLog {
+  id: string;
+  patient_id: string;
+  local_date: string;
+  logged_at: string;
+  meal_type: string;
+  raw_text: string;
+  status: string;
+  clarification_question: string | null;
+  clarification_options: Array<Record<string, unknown>> | null;
+  safety_flag: string | null;
+  items: MealItem[];
+  total_kcal: number;
+  total_carbs_g: number;
+  total_protein_g: number;
+  total_fat_g: number;
+  total_fiber_g: number;
+  is_estimated: boolean;
+}
+
+export interface DailyMealSummary {
+  date: string;
+  meal_count: number;
+  total_kcal: number;
+  total_carbs_g: number;
+  total_protein_g: number;
+  total_fat_g: number;
+  total_fiber_g: number;
+  is_estimated: boolean;
+  meals: MealLog[];
+}
+
+export interface MealSection {
+  has_logs: boolean;
+  recent_days: DailyMealSummary[];
+  note: string | null;
+}
+
 export interface Brief {
   patient: {
     id: string;
@@ -74,6 +131,7 @@ export interface Brief {
   trends: { hba1c: Trend; egfr: Trend };
   care_gaps: CareGap[];
   considerations: Consideration[];
+  meals?: MealSection | null;
 }
 
 export interface SourcePage {
@@ -110,6 +168,16 @@ export interface AuditEntry {
   patient_id: string | null;
 }
 
+export interface PatientChatResponse {
+  status: string;
+  reply: string;
+  meal_log: MealLog | null;
+  clarification_options?: Array<Record<string, unknown>> | null;
+  safety_flag?: string | null;
+  is_estimated: boolean;
+  disclaimer: string;
+}
+
 export interface Api {
   listPatients(): Promise<PatientSummary[]>;
   getBrief(id: string): Promise<Brief>;
@@ -119,4 +187,18 @@ export interface Api {
   review(insightId: string, action: ReviewAction): Promise<ReviewResult>;
   upload(id: string, file: File): Promise<UploadResult>;
   audit(): Promise<AuditEntry[]>;
+  postPatientMealChat(
+    id: string,
+    message: string,
+    mealType?: string,
+    actorHeader?: string
+  ): Promise<PatientChatResponse>;
+  clarifyMeal(
+    id: string,
+    mealLogId: string,
+    selectedOption?: Record<string, unknown>,
+    actorHeader?: string
+  ): Promise<MealLog>;
+  getMealHistory(id: string, actorHeader?: string): Promise<MealLog[]>;
+  getDailyMealSummary(id: string, date?: string, actorHeader?: string): Promise<DailyMealSummary>;
 }

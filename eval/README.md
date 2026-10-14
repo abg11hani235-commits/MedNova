@@ -1,4 +1,4 @@
-# ClinSight RAG Baseline Evaluation Harness
+# Rafiq RAG Baseline Evaluation Harness
 
 Evaluation dataset, retrieval pipelines, verification metrics, and reporting harness for clinical retrieval-based chat on synthetic diabetes EHR records.
 
@@ -15,7 +15,7 @@ Follows all rules in [AGENTS.md](../AGENTS.md):
 
 ## 1. Environment & Setup
 
-Ensure the virtual environment is ready and dependencies are installed. All commands should be executed from the **repository root** (`ClinSight`):
+Ensure the virtual environment is ready and dependencies are installed. All commands should be executed from the **repository root** (`Rafiq`):
 
 ```powershell
 # Set backend import path for Python commands run from repository root
@@ -127,3 +127,20 @@ Combines all pipeline run artifacts in `eval/results/` into a concise comparison
 - `LLM_STRUCTURED_OUTPUT=false` by default, using plain JSON instructions plus Pydantic validation (set to `true` only for endpoints supporting strict json_object schemas).
 - LLM cache files (`eval/.cache/`) are hashed with SHA-256 and never contain raw API credentials.
 - All log outputs and exception traces redact secrets.
+
+---
+
+## 7. Deterministic Rules Engine Evaluation
+
+In accordance with AGENTS.md Rule 4, all clinical trends, screening care gaps, and medication considerations are computed strictly by deterministic Python rules in `backend/app/nutrition_rules.py` rather than by an LLM.
+
+To evaluate the precision, recall, and accuracy of these rules:
+
+```powershell
+# Run the rules evaluation suite (evaluates 28 synthetic test cases across all 6 rules)
+.\backend\.venv\Scripts\python eval/run_rules_eval.py
+```
+
+- **Test Cases**: `eval/rules_cases.jsonl` (contains 28 test cases covering real patient fixtures and edge cases: boundary values, missing data, negations, English/Arabic phrases).
+- **Report**: Generated at `eval/rules_eval_report.md`.
+

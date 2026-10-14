@@ -309,7 +309,7 @@ def generate_report(pipelines: list[str]) -> str:
 
     out: list[str] = []
     out.append("=== REPORT START ===\n")
-    out.append("CLINSIGHT RAG RETRIEVAL & GENERATION EVALUATION REPORT")
+    out.append("RAFIQ RAG RETRIEVAL & GENERATION EVALUATION REPORT")
     out.append("=" * 70)
 
     if not pipeline_data:
@@ -942,9 +942,7 @@ def generate_report(pipelines: list[str]) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="ClinSight Evaluation Report Generator"
-    )
+    parser = argparse.ArgumentParser(description="Rafiq Evaluation Report Generator")
     parser.add_argument(
         "--pipelines",
         type=str,

@@ -41,7 +41,7 @@ def check_models() -> None:
     url = f"{base_url}/models"
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "User-Agent": "ClinSight-Evaluator/1.0",
+        "User-Agent": "Rafiq-Evaluator/1.0",
     }
     if getattr(settings, "llm_http_referer", ""):
         headers["HTTP-Referer"] = settings.llm_http_referer

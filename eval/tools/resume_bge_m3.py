@@ -27,7 +27,7 @@ else:
 
     req = urllib.request.Request(URL)
     req.add_header("Range", f"bytes={current_size}-")
-    req.add_header("User-Agent", "ClinSight-Agent/1.0")
+    req.add_header("User-Agent", "Rafiq-Agent/1.0")
 
     start_time = time.time()
     last_print = time.time()

@@ -1,4 +1,4 @@
-"""Evaluation harness for ClinSight RAG pipelines (eval/run_eval.py).
+"""Evaluation harness for Rafiq RAG pipelines (eval/run_eval.py).
 
 Usage:
   python eval/run_eval.py --pipeline vector|bm25|hybrid|hybrid_terms|facts|fullchart|all
@@ -645,7 +645,7 @@ def run_pipeline_eval(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ClinSight RAG Evaluation Harness")
+    parser = argparse.ArgumentParser(description="Rafiq RAG Evaluation Harness")
     parser.add_argument(
         "--pipeline",
         type=str,

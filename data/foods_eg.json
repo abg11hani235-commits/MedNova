@@ -3,7 +3,7 @@
     "id": "food-aish-baladi",
     "name_ar": "عيش بلدي",
     "name_en": "Baladi Bread",
-    "aliases": ["عيش بلدي", "عيش", "خبز بلدي", "رغيف بلدي", "3eish", "3esh baladi", "eish baladi", "3eish balady"],
+    "aliases": ["عيش بلدي", "عيش", "خبز بلدي", "رغيف بلدي", "3eish", "3esh baladi", "eish baladi", "3eish balady", "baladi bread", "aish baladi", "loaf of baladi bread", "عيش baladi"],
     "portion_units": [
       {"unit_ar": "رغيف كامل", "unit_en": "whole loaf", "grams": 130.0},
       {"unit_ar": "نصف رغيف", "unit_en": "half loaf", "grams": 65.0},
@@ -102,7 +102,7 @@
     "id": "food-taameya",
     "name_ar": "طعمية / فلافل",
     "name_en": "Taameya (Egyptian Falafel)",
-    "aliases": ["طعمية", "فلافل", "قرص طعمية", "ساندوتش طعمية", "ta3meya", "taameya", "falafel", "tamiya"],
+    "aliases": ["طعمية", "فلافل", "قرص طعمية", "ساندوتش طعمية", "ta3meya", "taameya", "taemeya", "falafel", "tamiya"],
     "portion_units": [
       {"unit_ar": "قرص طعمية واحد", "unit_en": "1 piece", "grams": 35.0},
       {"unit_ar": "3 أقراص طعمية", "unit_en": "3 pieces", "grams": 105.0},
@@ -122,7 +122,7 @@
     "id": "food-egg-boiled",
     "name_ar": "بيض مسلوق",
     "name_en": "Boiled Egg",
-    "aliases": ["بيض مسلوق", "بيضه مسلوقه", "بيض", "بيضه", "egg", "boiled egg", "beid masloo2", "bayd maslouq"],
+    "aliases": ["بيض مسلوق", "بيضه مسلوقه", "بيض", "بيضه", "egg", "boiled egg", "boiled eggs", "beid masloo2", "bayd maslouq", "beid"],
     "portion_units": [
       {"unit_ar": "بيضة واحدة", "unit_en": "1 egg", "grams": 50.0},
       {"unit_ar": "بيضتان", "unit_en": "2 eggs", "grams": 100.0}
@@ -160,7 +160,7 @@
     "id": "food-gebna-areesh",
     "name_ar": "جبنة قريش",
     "name_en": "Areesh Cheese",
-    "aliases": ["جبنة قريش", "جبنه قريش", "قريش", "areesh", "gebna areesh", "cottage cheese"],
+    "aliases": ["جبنة قريش", "جبنه قريش", "قريش", "areesh", "gebna areesh", "areesh cheese", "cottage cheese"],
     "portion_units": [
       {"unit_ar": "قطعة صغيرة (ملعقتين)", "unit_en": "small piece (2 tbsp)", "grams": 60.0},
       {"unit_ar": "قطعة متوسطة", "unit_en": "medium piece", "grams": 100.0}
@@ -217,7 +217,7 @@
     "id": "food-chicken-grilled",
     "name_ar": "فراخ مشوية",
     "name_en": "Grilled Chicken",
-    "aliases": ["فراخ مشوية", "فراخ", "دجاج مشوي", "صدر فرخة", "ورك فرخة", "ferakh", "fraakh", "grilled chicken", "dajaj"],
+    "aliases": ["فراخ مشوية", "فراخ", "دجاج مشوي", "صدر فرخة", "ورك فرخة", "فرخة مسلوقة", "فرخه مسلوقه", "ferakh", "fraakh", "grilled chicken", "grilled chicken breast", "chicken breast", "chicken", "dajaj"],
     "portion_units": [
       {"unit_ar": "صدر فرخة مشوي", "unit_en": "chicken breast", "grams": 150.0},
       {"unit_ar": "ورك فرخة مشوي", "unit_en": "chicken thigh", "grams": 130.0},
@@ -390,7 +390,7 @@
     "id": "food-salata-baladi",
     "name_ar": "سلطة بلدي خضراء",
     "name_en": "Egyptian Green Salad",
-    "aliases": ["سلطة", "سلطة بلدي", "سلطة خضراء", "طبق سلطة", "salata", "salad", "green salad", "salata baladi"],
+    "aliases": ["سلطة", "سلطة بلدي", "سلطة خضراء", "سلطة خضرا", "سلطه خضرا", "سلطه", "طبق سلطة", "salata", "salad", "green salad", "salata baladi"],
     "portion_units": [
       {"unit_ar": "طبق صغير", "unit_en": "small bowl", "grams": 100.0},
       {"unit_ar": "طبق متوسط", "unit_en": "medium bowl", "grams": 200.0}
@@ -606,6 +606,25 @@
       "carbs_g": 14.0,
       "fat_g": 1.2,
       "fiber_g": 2.8
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-khiyar",
+    "name_ar": "خيار طازج",
+    "name_en": "Fresh Cucumber",
+    "aliases": ["خيار", "خيارة", "خياره", "cucumber", "khiyar", "fresh cucumber"],
+    "portion_units": [
+      {"unit_ar": "ثمرة خيار واحدة", "unit_en": "1 cucumber", "grams": 60.0},
+      {"unit_ar": "نصف خيارة", "unit_en": "half cucumber", "grams": 30.0}
+    ],
+    "per_100g": {
+      "kcal": 15.0,
+      "protein_g": 0.7,
+      "carbs_g": 3.6,
+      "fat_g": 0.1,
+      "fiber_g": 0.5
     },
     "source": "author estimate, unverified",
     "verified": false

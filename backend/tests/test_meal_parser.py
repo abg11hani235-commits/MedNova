@@ -12,9 +12,9 @@ from app.meal_parser import (
 
 def test_franco_digit_conversion_only_inside_words():
     # Digits inside words must convert
-    assert normalize_franco_word("3eish") == "eeish"
+    assert normalize_franco_word("3eish") == "eish"
     assert normalize_franco_word("ma7shi") == "mahshi"
-    assert normalize_franco_word("ta3meya") == "taemeya"
+    assert normalize_franco_word("ta3meya") == "taameya"
     assert normalize_franco_word("2ahwa") == "aahwa"
 
     # Standalone numbers must NEVER convert

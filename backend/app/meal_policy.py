@@ -64,12 +64,16 @@ _DIET_PLAN_PATTERNS = [
 ]
 
 _MEDICATION_DOSE_PATTERNS = [
-    # Arabic: اوقف الانسولين, اغير الجرعة, اخد كام وحدة, برشام للتخسيس, ازود الميتفورمين
+    # Arabic: اوقف الانسولين, اغير الجرعة, اخد كام وحدة, برشام للتخسيس,
+    # ازود الميتفورمين, اكتبلي علاج, جرعة أنسولين
     r"(?:اوقف\s+(?:الانسولين|العلاج|الدوا|الميتفورمين)|اغير\s+الجرع|ازود\s+الجرع|انقص\s+الجرع)",
-    r"(?:اخد\s+كام\s+وحد|كم\s+وحد[هة]\s+انسولين|جرع[هة]\s+الانسولين|دواء\s+للسكر|برشام)",
-    # English: should i stop insulin, change my dose, what dose of metformin, increase insulin units
+    r"(?:اخد\s+كام\s+وحد|كم\s+وحد[هة]\s+انسولين|جرع[هة]\s+(?:الانسولين|[أا]?نسولين|علاج|دوا|مناسب[هة])|دواء\s+للسكر|برشام)",
+    r"(?:اكتبي?|اوصفي?)\s+(?:علاج|دوا|روشتة|[أا]?نسولين|جرع[هة])",
+    # English: should i stop insulin, change my dose, what dose of metformin,
+    # increase insulin units, prescribe meds
     r"\b(?:should\s+i\s+(?:stop|change|increase|decrease|take|inject))\b",
     r"\b(?:what\s+dose|how\s+many\s+units)\b",
+    r"\b(?:prescribe|write\s+me|give\s+me)\s+(?:meds|medicine|medication|insulin|dose|prescription)\b",
 ]
 
 _DIAGNOSIS_SYMPTOM_PATTERNS = [

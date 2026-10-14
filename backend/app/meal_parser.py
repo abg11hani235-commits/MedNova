@@ -36,7 +36,7 @@ FOODS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "foods_eg.
 # Arabic-Indic digit translation
 ARABIC_INDIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 
-# Fractions in Egyptian Arabic
+# Fractions in Egyptian Arabic, Franco, and English
 FRACTIONS_MAP = {
     "تلات ارباع": 0.75,
     "تلات أرباع": 0.75,
@@ -48,9 +48,16 @@ FRACTIONS_MAP = {
     "ربع": 0.25,
     "تلت": 0.33,
     "ثلث": 0.33,
+    "nos": 0.5,
+    "noss": 0.5,
+    "rob3": 0.25,
+    "telt": 0.33,
+    "half": 0.5,
+    "quarter": 0.25,
+    "third": 0.33,
 }
 
-# Number words in Egyptian Arabic
+# Number words in Egyptian Arabic, Franco, and English
 NUMBER_WORDS = {
     "واحد": 1.0,
     "واحدة": 1.0,
@@ -82,6 +89,16 @@ NUMBER_WORDS = {
     "تسع": 9.0,
     "عشرة": 10.0,
     "عشر": 10.0,
+    "one": 1.0,
+    "two": 2.0,
+    "three": 3.0,
+    "four": 4.0,
+    "five": 5.0,
+    "wahed": 1.0,
+    "etnein": 2.0,
+    "talata": 3.0,
+    "arba3a": 4.0,
+    "khamsa": 5.0,
 }
 
 # Duals in Egyptian Arabic: word -> (quantity, unit_hint, food_hint)
@@ -99,6 +116,9 @@ DUALS_MAP = {
     "سندوتشين": (2.0, "ساندوتش", None),
     "حبتين": (2.0, "ثمرة", None),
     "ثمرتين": (2.0, "ثمرة", None),
+    "سلطتين": (2.0, "طبق", "سلطة بلدي"),
+    "خيارتين": (2.0, "ثمرة", "خيار"),
+    "فرختين": (2.0, "فرخة", "فرخة مشوية"),
 }
 
 UNKNOWN_FOOD_MSG = (
@@ -178,10 +198,14 @@ def normalize_franco_word(token: str) -> str:
 
     # Franco digit mapping inside words
     converted = token.lower()
-    converted = re.sub(r"3", "e", converted)
+    converted = re.sub(r"a3", "aa", converted)
+    converted = re.sub(r"^3e", "e", converted)
+    converted = re.sub(r"^3", "a", converted)
+    converted = re.sub(r"3", "a", converted)
     converted = re.sub(r"7", "h", converted)
     converted = re.sub(r"5", "kh", converted)
-    converted = re.sub(r"2", "a", converted)
+    converted = re.sub(r"^2", "a", converted)
+    converted = re.sub(r"2", "q", converted)
     converted = re.sub(r"8", "gh", converted)
     converted = re.sub(r"9", "q", converted)
     return converted
@@ -298,8 +322,9 @@ def find_food_candidate(
 def parse_quantity_and_unit(segment: str) -> tuple[float | None, str | None, str]:
     """Parse quantity, unit, and remaining food mention from a text segment."""
     text = segment.strip()
-    # Strip leading 'و' if attached to segment (e.g. 'وبيضتين' -> 'بيضتين')
+    # Strip leading 'و' or 'w' if attached to segment
     text = re.sub(r"^و(?!\w*(?:نص|ربع|تلت))", "", text).strip()
+    text = re.sub(r"^w\s+", "", text, flags=re.IGNORECASE).strip()
     norm = normalize_text(text)
 
     # 1. Check dual words (e.g. رغيفين, بيضتين)
@@ -319,69 +344,113 @@ def parse_quantity_and_unit(segment: str) -> tuple[float | None, str | None, str
                     remainder = f"{base_noun} {remainder}".strip()
             return qty, unit, remainder
 
-    # 2. Check compound fractions (e.g. رغيف ونص, طبق وربع, 2 ونص)
-    compound_pattern = re.compile(
-        r"(?:(\d+(?:\.\d+)?)\s*و\s*(نص|ربع|تلت|تلات ارباع)|(\S+)\s*و\s*(نص|ربع|تلت|تلات ارباع))"
+    # 2. Check compound fractions (e.g. رغيف ونص, طبق وربع, 2 ونص, 1 and half)
+    _compound_regex = (
+        r"(?:(\d+(?:\.\d+)?)\s*(?:و|and|\+)\s*(نص|ربع|تلت|تلات ارباع|half|quarter|third|nos|rob3)|"
+        r"(\S+)\s*(?:و|and|\+)\s*(نص|ربع|تلت|تلات ارباع|half|quarter|third|nos|rob3))"
     )
+    compound_pattern = re.compile(_compound_regex, re.IGNORECASE)
     m = compound_pattern.search(norm)
     if m:
         num_str, frac1, unit_str, frac2 = m.groups()
         if num_str and frac1:
-            qty = float(num_str) + FRACTIONS_MAP.get(frac1, 0.0)
+            qty = float(num_str) + FRACTIONS_MAP.get(frac1.lower(), 0.0)
             remainder = norm[: m.start()] + " " + norm[m.end() :]
             return qty, None, remainder.strip()
         if unit_str and frac2:
             base_qty = 1.0
-            frac_val = FRACTIONS_MAP.get(frac2, 0.0)
+            frac_val = FRACTIONS_MAP.get(frac2.lower(), 0.0)
             qty = base_qty + frac_val
             remainder = norm[: m.start()] + " " + norm[m.end() :]
             return qty, unit_str, remainder.strip()
 
-    # 3. Check standalone fractions (نص رغيف, ربع فرخة, نص)
+    # 3. Check standalone fractions (نص رغيف, ربع فرخة, نص, half loaf)
     for frac_word, frac_val in FRACTIONS_MAP.items():
         pattern = rf"\b{frac_word}\b"
-        if re.search(pattern, norm):
-            remainder = re.sub(pattern, "", norm).strip()
-            # check if following word is a unit
+        if re.search(pattern, norm, flags=re.IGNORECASE):
+            remainder = re.sub(pattern, "", norm, flags=re.IGNORECASE).strip()
+            remainder = re.sub(r"^of\s+", "", remainder, flags=re.IGNORECASE).strip()
             unit_match = re.match(
-                r"^(رغيف|طبق|معلقة|كوب|كباية|قطعة|علبة|فرخة|ساندوتش|سندوتش)\b", remainder
+                r"^(رغيف|طبق|معلقة|كوب|كباية|قطعة|علبة|فرخة|فرخه|ساندوتش|سندوتش|loaf|dish|plate|bowl|cup|spoon|tbsp|piece|breast|sandwich)\b",
+                remainder,
+                flags=re.IGNORECASE,
             )
             unit = None
             if unit_match:
                 unit = unit_match.group(1)
                 remainder = remainder[unit_match.end() :].strip()
+            remainder = re.sub(r"^of\s+", "", remainder, flags=re.IGNORECASE).strip()
+            if unit in ("فرخة", "فرخه", "دجاجة", "breast"):
+                has_chicken = "فرخ" in remainder or "دجاج" in remainder or "chicken" in remainder
+                if not has_chicken:
+                    remainder = f"فرخة {remainder}".strip()
             return frac_val, unit, remainder
 
-    # 4. Check number words (e.g. واحد, اتنين, تلاتة)
+    # 4. Check number words (e.g. واحد, اتنين, تلاتة, one, two)
     for num_word, val in NUMBER_WORDS.items():
         pattern = rf"\b{num_word}\b"
-        if re.search(pattern, norm):
-            remainder = re.sub(pattern, "", norm).strip()
-            return val, None, remainder
+        if re.search(pattern, norm, flags=re.IGNORECASE):
+            remainder = re.sub(pattern, "", norm, flags=re.IGNORECASE).strip()
+            remainder = re.sub(r"^of\s+", "", remainder, flags=re.IGNORECASE).strip()
+            unit_match = re.match(
+                r"^(رغيف|طبق|معلقة|ملاعق|معالق|كوب|كباية|قطعة|علبة|فرخة|فرخه|ساندوتش|سندوتش|قرص|أقراص|loaf|dish|plate|bowl|cup|spoon|tbsp|piece|breast|sandwich)\b",
+                remainder,
+                flags=re.IGNORECASE,
+            )
+            unit = None
+            if unit_match:
+                unit = unit_match.group(1)
+                remainder = remainder[unit_match.end() :].strip()
+            remainder = re.sub(r"^of\s+", "", remainder, flags=re.IGNORECASE).strip()
+            return val, unit, remainder
 
-    # 5. Check numeric patterns (e.g. "2 رغيف", "150 جم", "1.5 كوب", "3 بيضات")
+    # 5. Check numeric patterns (e.g. "2 رغيف", "150 جم", "1.5 كوب", "4 معالق")
     num_pattern = re.compile(
-        r"\b(\d+(?:\.\d+)?)\s*(جرام|جم|g|مل|رغيف|ارغفة|أرغفة|طبق|أطباق|معلقة|ملاعق|كوب|كباية|كوباية|قطعة|قطع|علبة|علب|ساندوتش|سندوتش)?\b"
+        r"\b(\d+(?:\.\d+)?)\s*(جرام|جم|g|مل|رغيف|ارغفة|أرغفة|طبق|أطباق|معلقة|ملاعق|معالق|كوب|كباية|كوباية|قطعة|قطع|علبة|علب|ساندوتش|سندوتش|قرص|أقراص|loaf|loaves|dish|dishes|plate|plates|cup|cups|tbsp|tablespoon|tablespoons|spoon|spoons|piece|pieces|breast|breasts|egg|eggs|sandwich|sandwiches|can|cans)?\b",
+        re.IGNORECASE,
     )
     num_m = num_pattern.search(norm)
     if num_m:
         qty = float(num_m.group(1))
         unit = num_m.group(2)
         remainder = norm[: num_m.start()] + " " + norm[num_m.end() :]
+        remainder = re.sub(r"\bof\b", " ", remainder, flags=re.IGNORECASE)
+        remainder = re.sub(r"\s+", " ", remainder).strip()
+        if unit and unit.lower() in ("egg", "eggs", "boiled eggs"):
+            if "egg" not in remainder.lower() and "بيض" not in remainder:
+                remainder = f"egg {remainder}".strip()
         return qty, unit, remainder.strip()
 
-    # 6. Singular unit nouns without digits (e.g. "رغيف عيش بلدي", "بيضة مسلوقة", "كوباية شاي")
+    # 6. Singular unit nouns without digits (e.g. "رغيف عيش بلدي", "بيضة مسلوقة", "teba2")
     singular_pattern = re.compile(
-        r"\b(رغيف|كوباية|كباية|كوب|معلقة|ملعقة|بيضة|بيضا|ساندوتش|سندوتش|علبة|قطعة)\b"
+        r"\b(رغيف|كوباية|كباية|كوب|معلقة|ملعقة|بيضة|بيضا|ساندوتش|سندوتش|علبة|قطعة|طبق|خيارة|خياره|صدر|فرخة|فرخه|تفاحة|تفاحه|موزة|موزه|قرص|سلطة|سلطه|salad|loaf|dish|plate|bowl|cup|spoon|tbsp|sandwich|sandwitch|breast|egg|piece|can|cucumber|teba2|taba2|tebaq)\b",
+        re.IGNORECASE,
     )
     s_m = singular_pattern.search(norm)
     if s_m:
         unit = s_m.group(1)
         remainder = norm[: s_m.start()] + " " + norm[s_m.end() :]
-        if unit in ("بيضة", "بيضا"):
-            if "بيض" not in remainder:
+        remainder = re.sub(r"\bof\b", " ", remainder, flags=re.IGNORECASE)
+        remainder = re.sub(r"\s+", " ", remainder).strip()
+        unit_lower = unit.lower()
+        if unit in ("بيضة", "بيضا") or unit_lower == "egg":
+            if "بيض" not in remainder and "egg" not in remainder.lower():
                 remainder = f"بيض {remainder}".strip()
             unit = "بيضة"
+        elif unit in ("خيارة", "خياره") or unit_lower == "cucumber":
+            if "خيار" not in remainder and "cucumber" not in remainder.lower():
+                remainder = f"خيار {remainder}".strip()
+            unit = "ثمرة"
+        elif unit in ("فرخة", "فرخه"):
+            if "فرخ" not in remainder and "دجاج" not in remainder:
+                remainder = f"فرخة {remainder}".strip()
+        elif unit in ("صدر",) or unit_lower == "breast":
+            if "فرخ" not in remainder and "chicken" not in remainder.lower():
+                remainder = f"صدر فرخة {remainder}".strip()
+        elif unit in ("سلطة", "سلطه") or unit_lower == "salad":
+            if not remainder:
+                remainder = "سلطة بلدي"
+            unit = "طبق"
         return 1.0, unit, remainder.strip()
 
     return None, None, norm
@@ -474,21 +543,29 @@ def generate_clarification_for_food(food: dict[str, Any]) -> tuple[str, list[dic
 def parse_meal_text_deterministic(text: str) -> ParsedMealResult:
     """Deterministic parser extracting meal items, portions, and macros without LLM.
 
-    Splits on common conjunctions (و, مع, +, ,, then) and parses each segment.
+    Splits on common conjunctions (و, مع, +, ,, then, and, with, w) and parses each segment.
     """
     raw_clean = normalize_text(text)
 
-    # 1. Strip conversational lead-in phrases (e.g. أكلت, فطرت, شربت, انا اكلت)
+    # 1. Strip conversational lead-in phrases (e.g. أكلت, فطرت, شربت, انا اكلت, i ate, had)
     prefix_pattern = (
         r"^(?:انا|أنا)?\s*(?:اكلت|أكلت|فطرت|اتغديت|اتعشيت|شربت|خدت|أخدت|اخترت|"
-        r"وجبتي كانت|وجبتي|كانت|تناولت)\s+"
+        r"وجبتي كانت|وجبتي|كانت|تناولت|i\s+ate|i\s+had|ate|had)\s+"
     )
-    clean = re.sub(prefix_pattern, "", raw_clean.strip())
+    clean = re.sub(prefix_pattern, "", raw_clean.strip(), flags=re.IGNORECASE)
+
+    # Strip trailing meal context (e.g. for lunch, على الغدا)
+    trailing_pattern = (
+        r"\s+(?:for\s+(?:lunch|breakfast|dinner|snack)|على\s+(?:الغدا|الفطار|العشا))\s*$"
+    )
+    clean = re.sub(trailing_pattern, "", clean.strip(), flags=re.IGNORECASE)
 
     # 2. Split into meal clauses
-    # Splitting on commas, plus, مع, and 'و' (when not part of a fraction like ونص/وربع/وتلت)
-    split_pattern = r"(?:,|\+|\bمع\b|\s+و(?!(?:نص|ربع|تلت|تلات ارباع|نصف|ثلث)\b))"
-    segments = [s.strip() for s in re.split(split_pattern, clean) if s.strip()]
+    # Splitting on commas, plus, مع, with, and, w, and 'و' (excluding fractions)
+    split_pattern = (
+        r"(?:,|\+|\bمع\b|\bwith\b|\band\b|\s+w\s+|\s+و(?!(?:نص|ربع|تلت|تلات ارباع|نصف|ثلث)\b))"
+    )
+    segments = [s.strip() for s in re.split(split_pattern, clean, flags=re.IGNORECASE) if s.strip()]
 
     if not segments:
         return ParsedMealResult(
@@ -519,7 +596,34 @@ def parse_meal_text_deterministic(text: str) -> ParsedMealResult:
         if not food_mention:
             food_mention = seg_clean
 
-        candidate, score, method = find_food_candidate(food_mention)
+        # Check for portion size descriptors in food_mention (e.g. صغير, soghayar, small)
+        size_m = re.search(
+            r"\b(صغير[هة]?|كبير[هة]?|متوسط[هة]?|soghayar|soqayar|kebir|motawasset|small|medium|large)\b",
+            food_mention,
+            re.IGNORECASE,
+        )
+        if size_m:
+            size_word = size_m.group(1).lower()
+            temp_clean = re.sub(
+                r"\b(صغير[هة]?|كبير[هة]?|متوسط[هة]?|soghayar|soqayar|kebir|motawasset|small|medium|large)\b",
+                " ",
+                food_mention,
+                flags=re.IGNORECASE,
+            ).strip()
+            temp_clean = re.sub(r"\s+", " ", temp_clean).strip()
+            candidate, score, method = find_food_candidate(temp_clean)
+            if candidate:
+                if not unit or unit in ("طبق", "dish", "plate", "bowl", "teba2", "taba2", "tebaq"):
+                    if size_word in ("صغير", "صغيره", "soghayar", "small"):
+                        unit = "طبق صغير"
+                    elif size_word in ("كبير", "كبيره", "kebir", "large"):
+                        unit = "طبق كبير"
+                    else:
+                        unit = "طبق متوسط"
+            else:
+                candidate, score, method = find_food_candidate(food_mention)
+        else:
+            candidate, score, method = find_food_candidate(food_mention)
 
         if not candidate:
             # Try matching full segment
@@ -531,8 +635,13 @@ def parse_meal_text_deterministic(text: str) -> ParsedMealResult:
 
         # If food found but quantity missing or 0
         if qty is None or qty <= 0:
-            ambiguous_food = candidate
-            continue
+            if len(segments) > 1 and candidate.get("portion_units"):
+                qty = 1.0
+                if not unit:
+                    unit = candidate["portion_units"][0]["unit_ar"]
+            else:
+                ambiguous_food = candidate
+                continue
 
         item = calculate_item_macros(
             food=candidate,

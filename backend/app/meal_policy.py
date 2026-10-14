@@ -22,16 +22,18 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.constants import EMERGENCY_SYMPTOM_TEXT, PATIENT_CHAT_DECLINE_TEXT
 from app.meal_parser import _normalize_for_matching
 from app.rag.policy import should_decline_policy
 
-PATIENT_CHAT_DECLINE_TEXT = (
-    "أنا مش بقدم نصايح علاجية أو غذائية. اسأل الأخصائي بتاعك، وأنا هسجل أكلك وأوصله ليه."
-)
-
-EMERGENCY_SYMPTOM_TEXT = (
-    "دي أعراض طارئة تستدعي تدخل فوري. برجاء التوجه لأقرب طوارئ أو الاتصال بالإسعاف (123) فوراً."
-)
+__all__ = [
+    "EMERGENCY_SYMPTOM_TEXT",
+    "PATIENT_CHAT_DECLINE_TEXT",
+    "is_emergency_symptom",
+    "is_plain_record_lookup",
+    "should_decline_patient_chat",
+    "validate_and_build_daily_summary",
+]
 
 # 1. Emergency symptom patterns
 _EMERGENCY_PATTERNS = [
@@ -50,9 +52,9 @@ _COMPILED_EMERGENCY = [re.compile(p, re.IGNORECASE) for p in _EMERGENCY_PATTERNS
 # 2. Nutrition/diet plan policy decline patterns
 _DIET_PLAN_PATTERNS = [
     # Arabic: اعملي دايت, جدول اكل, نظام غذائي, خطة وجبات, عايز اخس, كم كالوري اكل عشان اخس
-    r"(?:اعملي?\s+دايت|اكتبي?\s+دايت|جدول\s+اكل|نظام\s+غذائي|خط[هة]\s+وجبات|دايت\s+للتخسيس|حمي[هة]\s+غذائي[هة])",
+    r"(?:اعملي?\s+دايت|اكتبي?\s+دايت|اديني\s+(?:دايت|نظام|خطة|جدول)|جدول\s+اكل|نظام\s+غذائي|خط[هة]\s+وجبات|دايت\s+للتخسيس|حمي[هة]\s+غذائي[هة]|دايت\s+بلان)",
     r"(?:عايز\s+اخس|عايز[هة]\s+اخس|طريق[هة]\s+تخسيس|رجيم|نظام\s+كيتو|دايت\s+لو\s+كارب|ازاي\s+انزل\s+وزني)",
-    r"(?:كم\s+كالوري|كام\s+كالوري|كم\s+سعر|كام\s+سعر)\s+محتاج",
+    r"(?:كم\s+كالوري|كام\s+كالوري|كم\s+سعر|كام\s+سعر)\s+(?:محتاج|في\s+اليوم|عشان)",
     r"(?:احسب\s+سعراتي|هدفي\s+من\s+السعرات)",
     # English: meal plan, diet plan, keto diet, daily calorie targets, weight loss diet
     r"\b(?:diet|meal)\s+plan\b",

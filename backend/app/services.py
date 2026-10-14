@@ -1,12 +1,14 @@
 import re
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from . import schemas
 from .constants import CROSS_PATIENT_TEXT, DECLINE_POLICY_TEXT, REFUSAL_TEXT
+from .meal_parser import get_foods_table
 from .models import (
     AuditLog,
     ChatMessage,
@@ -15,6 +17,7 @@ from .models import (
     Insight,
     MealLog,
     Patient,
+    get_cairo_date,
 )
 from .nutrition_rules import (
     evaluate_hba1c_gap,
@@ -472,6 +475,8 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
     snapshot = sorted(snapshot, key=lambda s: SEV_RANK.get(s.severity, 9))
     considerations = sorted(considerations, key=lambda c: SEV_RANK.get(c.severity, 9))
 
+    meals_section = build_meals_section(db, p.id)
+
     return schemas.Brief(
         patient=schemas.PatientInfo(
             id=p.id,
@@ -488,6 +493,128 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
         trends=schemas.Trends(hba1c=_trend(p, "hba1c"), egfr=_trend(p, "egfr")),
         care_gaps=gaps,
         considerations=considerations[:3],
+        meals=meals_section,
+    )
+
+
+def build_meal_log_schema(
+    db: Session,
+    log: MealLog,
+    foods_by_id: dict[str, Any] | None = None,
+) -> schemas.MealLogSchema:
+    """Build schemas.MealLogSchema with populated items and source_food_row."""
+    if foods_by_id is None:
+        foods_table = get_foods_table()
+        foods_by_id = {f["id"]: f for f in foods_table}
+
+    date_str = log.local_date or get_cairo_date(log.logged_at)
+    items_schemas = []
+    tot_kcal = 0.0
+    tot_carbs = 0.0
+    tot_prot = 0.0
+    tot_fat = 0.0
+    tot_fib = 0.0
+
+    for it in log.items:
+        f_row = foods_by_id.get(it.food_id)
+        food_name_ar = f_row["name_ar"] if f_row else it.food_id
+        food_name_en = f_row["name_en"] if f_row else it.food_id
+        tot_kcal += it.kcal
+        tot_carbs += it.carbs_g
+        tot_prot += it.protein_g
+        tot_fat += it.fat_g
+        tot_fib += it.fiber_g
+        items_schemas.append(
+            schemas.MealItemSchema(
+                id=str(it.id),
+                food_id=it.food_id,
+                food_name_ar=food_name_ar,
+                food_name_en=food_name_en,
+                quantity=it.quantity,
+                unit=it.unit,
+                grams=it.grams,
+                kcal=it.kcal,
+                protein_g=it.protein_g,
+                carbs_g=it.carbs_g,
+                fat_g=it.fat_g,
+                fiber_g=it.fiber_g,
+                match_method=it.match_method,
+                match_score=it.match_score,
+                confirmed=it.confirmed,
+                source_food_row=f_row,
+            )
+        )
+
+    return schemas.MealLogSchema(
+        id=str(log.id),
+        patient_id=log.patient_id,
+        local_date=date_str,
+        logged_at=log.logged_at.isoformat() if log.logged_at else "",
+        meal_type=log.meal_type,
+        raw_text=log.raw_text,
+        status=log.status,
+        clarification_question=log.clarification_question,
+        clarification_options=log.clarification_options,
+        safety_flag=log.safety_flag,
+        items=items_schemas,
+        total_kcal=round(tot_kcal, 1),
+        total_carbs_g=round(tot_carbs, 1),
+        total_protein_g=round(tot_prot, 1),
+        total_fat_g=round(tot_fat, 1),
+        total_fiber_g=round(tot_fib, 1),
+        is_estimated=True,
+    )
+
+
+def build_meals_section(db: Session, patient_id: str) -> schemas.MealSection:
+    """Build meals section with daily totals and Source Trace (raw message + food-table row)."""
+    logs = list(
+        db.scalars(
+            select(MealLog)
+            .where(MealLog.patient_id == patient_id)
+            .order_by(MealLog.logged_at.desc())
+        )
+    )
+    if not logs:
+        return schemas.MealSection(has_logs=False, recent_days=[], note=None)
+
+    foods_table = get_foods_table()
+    foods_by_id = {f["id"]: f for f in foods_table}
+
+    # Group by local_date
+    days_dict: dict[str, list[schemas.MealLogSchema]] = {}
+    for log in logs:
+        log_schema = build_meal_log_schema(db, log, foods_by_id=foods_by_id)
+        days_dict.setdefault(log_schema.local_date, []).append(log_schema)
+
+    recent_days = []
+    for d_str in sorted(days_dict.keys(), reverse=True):
+        d_logs = days_dict[d_str]
+        valid_logs = [
+            log_entry
+            for log_entry in d_logs
+            if log_entry.status in ("parsed", "confirmed", "emergency")
+        ]
+        recent_days.append(
+            schemas.DailyMealSummary(
+                date=d_str,
+                meal_count=len(valid_logs),
+                total_kcal=round(sum(log_entry.total_kcal for log_entry in valid_logs), 1),
+                total_carbs_g=round(sum(log_entry.total_carbs_g for log_entry in valid_logs), 1),
+                total_protein_g=round(
+                    sum(log_entry.total_protein_g for log_entry in valid_logs), 1
+                ),
+                total_fat_g=round(sum(log_entry.total_fat_g for log_entry in valid_logs), 1),
+                total_fiber_g=round(sum(log_entry.total_fiber_g for log_entry in valid_logs), 1),
+                is_estimated=True,
+                meals=d_logs,
+            )
+        )
+
+    return schemas.MealSection(
+        has_logs=True,
+        recent_days=recent_days,
+        note="جميع القيم الغذائية تقديرية وغير معتمدة طبياً (author estimate, unverified).",
     )
 
 

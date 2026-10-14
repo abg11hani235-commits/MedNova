@@ -370,6 +370,20 @@ def parse_quantity_and_unit(segment: str) -> tuple[float | None, str | None, str
         remainder = norm[: num_m.start()] + " " + norm[num_m.end() :]
         return qty, unit, remainder.strip()
 
+    # 6. Singular unit nouns without digits (e.g. "رغيف عيش بلدي", "بيضة مسلوقة", "كوباية شاي")
+    singular_pattern = re.compile(
+        r"\b(رغيف|كوباية|كباية|كوب|معلقة|ملعقة|بيضة|بيضا|ساندوتش|سندوتش|علبة|قطعة)\b"
+    )
+    s_m = singular_pattern.search(norm)
+    if s_m:
+        unit = s_m.group(1)
+        remainder = norm[: s_m.start()] + " " + norm[s_m.end() :]
+        if unit in ("بيضة", "بيضا"):
+            if "بيض" not in remainder:
+                remainder = f"بيض {remainder}".strip()
+            unit = "بيضة"
+        return 1.0, unit, remainder.strip()
+
     return None, None, norm
 
 

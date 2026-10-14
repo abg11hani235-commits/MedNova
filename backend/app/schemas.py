@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -95,6 +95,63 @@ class Consideration(BaseModel):
     source: Source | None = None
 
 
+class MealItemSchema(BaseModel):
+    id: str
+    food_id: str
+    food_name_ar: str
+    food_name_en: str
+    quantity: float
+    unit: str
+    grams: float
+    kcal: float
+    protein_g: float
+    carbs_g: float
+    fat_g: float
+    fiber_g: float
+    match_method: str
+    match_score: float
+    confirmed: bool
+    source_food_row: dict[str, Any] | None = None
+
+
+class MealLogSchema(BaseModel):
+    id: str
+    patient_id: str
+    local_date: str
+    logged_at: str
+    meal_type: str
+    raw_text: str
+    status: str
+    clarification_question: str | None = None
+    clarification_options: list[dict[str, Any]] | None = None
+    safety_flag: str | None = None
+    items: list[MealItemSchema] = []
+    total_kcal: float = 0.0
+    total_carbs_g: float = 0.0
+    total_protein_g: float = 0.0
+    total_fat_g: float = 0.0
+    total_fiber_g: float = 0.0
+    is_estimated: bool = True
+
+
+class DailyMealSummary(BaseModel):
+    date: str
+    meal_count: int
+    total_kcal: float
+    total_carbs_g: float
+    total_protein_g: float
+    total_fat_g: float
+    total_fiber_g: float
+    is_estimated: bool = True
+    meals: list[MealLogSchema] = []
+
+
+class MealSection(BaseModel):
+    has_logs: bool
+    recent_days: list[DailyMealSummary] = []
+    note: str | None = None
+
+
 class Brief(BaseModel):
     patient: PatientInfo
     coverage: Coverage
@@ -102,6 +159,7 @@ class Brief(BaseModel):
     trends: Trends
     care_gaps: list[CareGap]
     considerations: list[Consideration]
+    meals: MealSection | None = None
 
 
 class Highlight(BaseModel):
@@ -149,3 +207,23 @@ class AuditEntry(BaseModel):
     actor: str
     action: str
     patient_id: str | None = None
+
+
+class PatientChatRequest(BaseModel):
+    message: str
+    meal_type: str = "snack"
+
+
+class PatientClarifyRequest(BaseModel):
+    selected_option: dict[str, Any] | None = None
+    free_text: str | None = None
+
+
+class PatientChatResponse(BaseModel):
+    status: str
+    reply: str
+    meal_log: MealLogSchema | None = None
+    clarification_options: list[dict[str, Any]] | None = None
+    safety_flag: str | None = None
+    is_estimated: bool = True
+    disclaimer: str = "أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic."

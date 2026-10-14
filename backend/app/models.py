@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
@@ -146,7 +147,9 @@ class AuditLog(Base):
 class MealLog(Base):
     __tablename__ = "meal_logs"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    id: Mapped[str] = mapped_column(
+        String(64), primary_key=True, default=lambda: f"ml_{uuid.uuid4().hex[:12]}"
+    )
     patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id"), index=True)
     local_date: Mapped[str] = mapped_column(String(10), index=True)  # YYYY-MM-DD in Africa/Cairo
     logged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

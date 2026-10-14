@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 
 import { CareGapRow } from "../../../../components/CareGapRow";
 import { InsightRow } from "../../../../components/InsightCard";
+import { MealsSection } from "../../../../components/MealsSection";
 import { ReviewActions } from "../../../../components/ReviewActions";
 import { SeverityBadge } from "../../../../components/SeverityBadge";
 import { SourceChip } from "../../../../components/SourceChip";
@@ -66,6 +67,8 @@ export default function BriefPage() {
           <CareGapRow key={g.name} patientId={id} gap={g} />
         ))}
       </section>
+
+      {b.meals && b.meals.has_logs && <MealsSection patientId={id} meals={b.meals} />}
 
       <section>
         <h2>Follow-up Considerations</h2>

@@ -7,7 +7,15 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .constants import CROSS_PATIENT_TEXT, DECLINE_POLICY_TEXT, REFUSAL_TEXT
-from .models import AuditLog, ChatMessage, Chunk, File, Insight, Patient
+from .models import (
+    AuditLog,
+    ChatMessage,
+    Chunk,
+    File,
+    Insight,
+    MealLog,
+    Patient,
+)
 from .nutrition_rules import (
     evaluate_hba1c_gap,
     evaluate_meal_log_gap,
@@ -237,29 +245,45 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
         )
 
     # Dynamic rule evaluations for care gaps:
-    # 1. Meal log gap (evaluated only if meal-log source is present)
-    meal_log_source_present = any(f.kind == "meal_log" or "meal" in f.name.lower() for f in files)
+    # 1. Meal log gap (evaluated only if meal-log source or database records are present)
+    db_meal_logs = list(
+        db.scalars(
+            select(MealLog).where(
+                MealLog.patient_id == p.id,
+                MealLog.status.in_(["parsed", "confirmed", "emergency"]),
+            )
+        )
+    )
+    meal_log_source_present = (
+        any(f.kind == "meal_log" or "meal" in f.name.lower() for f in files)
+        or len(db_meal_logs) > 0
+    )
     if meal_log_source_present:
-        meal_files = [f for f in files if (f.kind == "meal_log" or "meal" in f.name.lower())]
-        meal_entries = [{"date": f.date} for f in meal_files if f.date]
+        meal_entries = [{"date": m.local_date} for m in db_meal_logs if m.local_date]
+        if not meal_entries:
+            meal_files = [f for f in files if (f.kind == "meal_log" or "meal" in f.name.lower())]
+            meal_entries = [{"date": f.date} for f in meal_files if f.date]
         meal_gap = evaluate_meal_log_gap(
             as_of_date=p.as_of_date,
             meal_log_enabled=True,
             meal_logs=meal_entries if meal_entries else None,
         )
-        if (
-            meal_gap
-            and meal_gap["status"] in ("overdue", "missing")
-            and not any("meal" in n for n in existing_gap_names)
-        ):
-            gaps.append(
-                schemas.CareGap(
-                    name=meal_gap["name"],
-                    status=meal_gap["status"],
-                    detail=meal_gap["detail"],
-                    source=None,
+        if meal_gap:
+            existing_meal_gap = next((g for g in gaps if "meal" in g.name.lower()), None)
+            if existing_meal_gap:
+                existing_meal_gap.status = meal_gap["status"]
+                existing_meal_gap.detail = meal_gap["detail"]
+            elif meal_gap["status"] in ("overdue", "missing") and not any(
+                "meal" in n for n in existing_gap_names
+            ):
+                gaps.append(
+                    schemas.CareGap(
+                        name=meal_gap["name"],
+                        status=meal_gap["status"],
+                        detail=meal_gap["detail"],
+                        source=None,
+                    )
                 )
-            )
 
     # 2. HbA1c gap rule (if hba1c tracked in trends and not already in gaps)
     if "hba1c" in (p.trends or {}) and not any("hba1c" in n for n in existing_gap_names):
@@ -413,6 +437,37 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
                         source=schemas.Source(**hf["citation"]) if hf.get("citation") else None,
                     )
                 )
+
+    # 7. Urgent symptoms reported in patient meal chat
+    emergency_meals = list(
+        db.scalars(
+            select(MealLog)
+            .where(
+                MealLog.patient_id == p.id,
+                MealLog.safety_flag == "emergency_symptom",
+            )
+            .order_by(MealLog.logged_at.desc())
+        )
+    )
+    for em in emergency_meals:
+        considerations.append(
+            schemas.Consideration(
+                id=f"cons-emergency-{em.id}",
+                severity="urgent_review",
+                statement=(
+                    "Patient reported acute severe symptoms during meal logging. "
+                    "Requires urgent clinical review."
+                ),
+                why=f'Patient reported: "{em.raw_text}"',
+                source=schemas.Source(
+                    chunk_id=f"meal-chat-{em.id}",
+                    file_name="Patient Meal Chat",
+                    page=1,
+                    quote=em.raw_text,
+                    date=em.local_date,
+                ),
+            )
+        )
 
     snapshot = sorted(snapshot, key=lambda s: SEV_RANK.get(s.severity, 9))
     considerations = sorted(considerations, key=lambda c: SEV_RANK.get(c.severity, 9))

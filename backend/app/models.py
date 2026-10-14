@@ -1,8 +1,9 @@
 import json
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
 from .config import get_settings
@@ -36,8 +37,29 @@ class EmbeddingType(TypeDecorator):
         return json.loads(value)
 
 
+CAIRO_TZ = ZoneInfo("Africa/Cairo")
+
+
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def get_cairo_date(dt: datetime | None = None) -> str:
+    """Return YYYY-MM-DD date string computed in Africa/Cairo timezone."""
+    if dt is None:
+        dt = datetime.now(UTC)
+    elif dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(CAIRO_TZ).strftime("%Y-%m-%d")
+
+
+def get_cairo_datetime(dt: datetime | None = None) -> datetime:
+    """Return datetime localized to Africa/Cairo timezone."""
+    if dt is None:
+        dt = datetime.now(UTC)
+    elif dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(CAIRO_TZ)
 
 
 class Patient(Base):
@@ -119,3 +141,64 @@ class AuditLog(Base):
     action: Mapped[str] = mapped_column(String(64))
     patient_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class MealLog(Base):
+    __tablename__ = "meal_logs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id"), index=True)
+    local_date: Mapped[str] = mapped_column(String(10), index=True)  # YYYY-MM-DD in Africa/Cairo
+    logged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    meal_type: Mapped[str] = mapped_column(String(32), default="unspecified")
+    raw_text: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(
+        String(32)
+    )  # parsed, needs_clarification, unknown_food, rejected, emergency
+    clarification_question: Mapped[str | None] = mapped_column(Text, nullable=True)
+    clarification_options: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    safety_flag: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    items: Mapped[list["MealItem"]] = relationship(
+        "MealItem", back_populates="meal_log", cascade="all, delete-orphan"
+    )
+
+
+class MealItem(Base):
+    __tablename__ = "meal_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    meal_log_id: Mapped[str] = mapped_column(
+        ForeignKey("meal_logs.id", ondelete="CASCADE"), index=True
+    )
+    food_id: Mapped[str] = mapped_column(String(64), index=True)
+    food_name_ar: Mapped[str] = mapped_column(String(128))
+    food_name_en: Mapped[str] = mapped_column(String(128))
+    quantity: Mapped[float] = mapped_column(Float, default=1.0)
+    unit: Mapped[str] = mapped_column(String(64))
+    grams: Mapped[float] = mapped_column(Float)
+    kcal: Mapped[float] = mapped_column(Float)
+    protein_g: Mapped[float] = mapped_column(Float)
+    carbs_g: Mapped[float] = mapped_column(Float)
+    fat_g: Mapped[float] = mapped_column(Float)
+    fiber_g: Mapped[float] = mapped_column(Float)
+    match_method: Mapped[str] = mapped_column(
+        String(32)
+    )  # exact_alias, fuzzy, llm_extracted, deterministic_fallback
+    match_score: Mapped[float] = mapped_column(Float, default=1.0)
+    confirmed: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    meal_log: Mapped["MealLog"] = relationship("MealLog", back_populates="items")
+
+
+class PatientChatMessage(Base):
+    __tablename__ = "patient_chat_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id"), index=True)
+    role: Mapped[str] = mapped_column(String(16))  # patient, assistant, system
+    content: Mapped[str] = mapped_column(Text)
+    meal_log_id: Mapped[str | None] = mapped_column(
+        ForeignKey("meal_logs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

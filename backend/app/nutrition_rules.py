@@ -195,6 +195,8 @@ def evaluate_renal_panel_gap(
     as_of_date: str | date,
     renal_records: list[dict[str, Any]] | None,
     threshold_months: int = RENAL_PANEL_GAP_MONTHS,
+    *,
+    threshold_falling_months: int = 6,
 ) -> dict[str, Any]:
     """Check if patient has a renal panel (creatinine, eGFR, or UACR) in last N months."""
     ref_date = _parse_date(as_of_date) or date.today()
@@ -206,13 +208,13 @@ def evaluate_renal_panel_gap(
             "last_date": None,
         }
 
-    valid_dates = []
+    valid_entries = []
     for r in renal_records:
         d = _parse_date(r.get("date"))
         if d:
-            valid_dates.append(d)
+            valid_entries.append((d, r.get("value")))
 
-    if not valid_dates:
+    if not valid_entries:
         return {
             "name": "Renal panel",
             "status": "missing",
@@ -220,24 +222,36 @@ def evaluate_renal_panel_gap(
             "last_date": None,
         }
 
-    latest = max(valid_dates)
-    diff_months = _months_between(ref_date, latest)
-    d_str = latest.strftime("%Y-%m-%d")
-    if diff_months > threshold_months:
+    valid_entries.sort(key=lambda x: x[0])
+    latest_date, latest_val = valid_entries[-1]
+    first_date, first_val = valid_entries[0]
+
+    is_falling = (
+        len(valid_entries) >= 2
+        and first_val is not None
+        and latest_val is not None
+        and (first_val - latest_val >= 10.0)
+    )
+    effective_threshold = threshold_falling_months if is_falling else threshold_months
+
+    diff_months = _months_between(ref_date, latest_date)
+    d_str = latest_date.strftime("%Y-%m-%d")
+    if diff_months > effective_threshold:
         return {
             "name": "Renal panel",
             "status": "overdue",
             "detail": (
-                f"Renal panel overdue (last recorded on {d_str}, > {threshold_months} months ago)."
+                f"Renal panel overdue (last recorded on {d_str}, "
+                f"> {effective_threshold} months ago)."
             ),
-            "last_date": latest.isoformat(),
+            "last_date": latest_date.isoformat(),
         }
 
     return {
         "name": "Renal panel",
         "status": "done",
         "detail": f"Renal panel completed on {d_str}.",
-        "last_date": latest.isoformat(),
+        "last_date": latest_date.isoformat(),
     }
 
 
@@ -489,9 +503,9 @@ def evaluate_medication_considerations(
             drop_amount = first_egfr - latest_egfr if len(sorted_egfr) >= 2 else 0.0
 
             is_below_review = latest_egfr < METFORMIN_EGFR_REVIEW_THRESHOLD
-            has_fallen = len(sorted_egfr) >= 2 and drop_amount > 0
+            is_sharp_drop = drop_amount >= EGFR_SHARP_DROP_THRESHOLD
 
-            if is_below_review or has_fallen:
+            if is_below_review or is_sharp_drop:
                 citation = cits.get("egfr") or cits.get("nephrology")
                 if citation:
                     # Severity determination:

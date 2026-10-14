@@ -114,3 +114,13 @@ pytest data/tests
 8. **PDF Layer Check:**
    - Scanned PDFs have 0 text layer.
    - Readable PDFs yield extracted text.
+
+---
+
+## Egyptian Food Composition Table (`data/foods_eg.json`)
+
+To support patient meal logging with deterministic portion and macro math, `data/foods_eg.json` provides base definitions for 32 common Egyptian food and beverage items (e.g. عيش بلدي، كشري، ملوخية، فول مدمس، طعمية، رز مصري).
+
+> [!WARNING]
+> **Author Estimates Only (Unverified):**
+> All values in `data/foods_eg.json` are marked `"source": "author estimate, unverified"` and `"verified": false`. These values are rough estimates constructed for demo and testing purposes and must be verified against an official Egyptian food composition table (such as the National Nutrition Institute - NNI) before any real-world clinical use. The UI explicitly labels all computed macros as "تقديري" (estimated).

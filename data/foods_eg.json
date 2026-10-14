@@ -1,0 +1,613 @@
+[
+  {
+    "id": "food-aish-baladi",
+    "name_ar": "عيش بلدي",
+    "name_en": "Baladi Bread",
+    "aliases": ["عيش بلدي", "عيش", "خبز بلدي", "رغيف بلدي", "3eish", "3esh baladi", "eish baladi", "3eish balady"],
+    "portion_units": [
+      {"unit_ar": "رغيف كامل", "unit_en": "whole loaf", "grams": 130.0},
+      {"unit_ar": "نصف رغيف", "unit_en": "half loaf", "grams": 65.0},
+      {"unit_ar": "ربع رغيف", "unit_en": "quarter loaf", "grams": 32.5}
+    ],
+    "per_100g": {
+      "kcal": 260.0,
+      "protein_g": 9.0,
+      "carbs_g": 52.0,
+      "fat_g": 1.5,
+      "fiber_g": 4.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-aish-fino",
+    "name_ar": "عيش فينو",
+    "name_en": "Fino Bread",
+    "aliases": ["عيش فينو", "فينو", "رغيف فينو", "صمولي", "fino", "3eish fino", "3esh fino"],
+    "portion_units": [
+      {"unit_ar": "رغيف فينو", "unit_en": "roll", "grams": 50.0},
+      {"unit_ar": "رغيفين فينو", "unit_en": "2 rolls", "grams": 100.0}
+    ],
+    "per_100g": {
+      "kcal": 280.0,
+      "protein_g": 8.5,
+      "carbs_g": 56.0,
+      "fat_g": 2.5,
+      "fiber_g": 2.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-roz-masri",
+    "name_ar": "أرز مصري مفلفل",
+    "name_en": "Egyptian White Rice",
+    "aliases": ["أرز", "رز", "رز مصري", "رز بشعرية", "رز مفلفل", "roz", "rozz", "rice", "roz bsha3reya"],
+    "portion_units": [
+      {"unit_ar": "طبق صغير (4 ملاعق)", "unit_en": "small bowl (4 tbsp)", "grams": 100.0},
+      {"unit_ar": "طبق متوسط (8 ملاعق)", "unit_en": "medium plate (8 tbsp)", "grams": 200.0},
+      {"unit_ar": "طبق كبير", "unit_en": "large plate", "grams": 300.0}
+    ],
+    "per_100g": {
+      "kcal": 140.0,
+      "protein_g": 2.7,
+      "carbs_g": 28.0,
+      "fat_g": 2.2,
+      "fiber_g": 0.5
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-koshari",
+    "name_ar": "كشري مصري",
+    "name_en": "Egyptian Koshari",
+    "aliases": ["كشري", "كشري مصري", "علبة كشري", "طبق كشري", "koshari", "koshary", "kushari"],
+    "portion_units": [
+      {"unit_ar": "علبة صغيرة", "unit_en": "small container", "grams": 250.0},
+      {"unit_ar": "طبق متوسط", "unit_en": "medium plate", "grams": 400.0},
+      {"unit_ar": "طبق كبير", "unit_en": "large plate", "grams": 600.0}
+    ],
+    "per_100g": {
+      "kcal": 165.0,
+      "protein_g": 5.5,
+      "carbs_g": 31.0,
+      "fat_g": 2.5,
+      "fiber_g": 3.5
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-foul-medames",
+    "name_ar": "فول مدمس بالزيت",
+    "name_en": "Foul Medames",
+    "aliases": ["فول", "فول مدمس", "فول بزيت", "فول حار", "طبق فول", "foul", "ful", "fool", "ful medames"],
+    "portion_units": [
+      {"unit_ar": "طبق صغير (4 ملاعق)", "unit_en": "small plate (4 tbsp)", "grams": 120.0},
+      {"unit_ar": "طبق متوسط", "unit_en": "medium plate", "grams": 200.0},
+      {"unit_ar": "ساندوتش فول", "unit_en": "sandwich", "grams": 100.0}
+    ],
+    "per_100g": {
+      "kcal": 130.0,
+      "protein_g": 7.5,
+      "carbs_g": 18.0,
+      "fat_g": 3.5,
+      "fiber_g": 5.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-taameya",
+    "name_ar": "طعمية / فلافل",
+    "name_en": "Taameya (Egyptian Falafel)",
+    "aliases": ["طعمية", "فلافل", "قرص طعمية", "ساندوتش طعمية", "ta3meya", "taameya", "falafel", "tamiya"],
+    "portion_units": [
+      {"unit_ar": "قرص طعمية واحد", "unit_en": "1 piece", "grams": 35.0},
+      {"unit_ar": "3 أقراص طعمية", "unit_en": "3 pieces", "grams": 105.0},
+      {"unit_ar": "ساندوتش طعمية", "unit_en": "sandwich", "grams": 120.0}
+    ],
+    "per_100g": {
+      "kcal": 290.0,
+      "protein_g": 10.5,
+      "carbs_g": 32.0,
+      "fat_g": 14.0,
+      "fiber_g": 6.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-egg-boiled",
+    "name_ar": "بيض مسلوق",
+    "name_en": "Boiled Egg",
+    "aliases": ["بيض مسلوق", "بيضه مسلوقه", "بيض", "بيضه", "egg", "boiled egg", "beid masloo2", "bayd maslouq"],
+    "portion_units": [
+      {"unit_ar": "بيضة واحدة", "unit_en": "1 egg", "grams": 50.0},
+      {"unit_ar": "بيضتان", "unit_en": "2 eggs", "grams": 100.0}
+    ],
+    "per_100g": {
+      "kcal": 145.0,
+      "protein_g": 12.5,
+      "carbs_g": 1.0,
+      "fat_g": 10.0,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-egg-fried",
+    "name_ar": "بيض مقلي بالزبدة",
+    "name_en": "Fried Egg",
+    "aliases": ["بيض مقلي", "بيض بالسمنة", "بيض مقلي بالزبدة", "fried egg", "beid ma2li"],
+    "portion_units": [
+      {"unit_ar": "بيضة مقلية", "unit_en": "1 fried egg", "grams": 55.0},
+      {"unit_ar": "بيضتين مقليتين", "unit_en": "2 fried eggs", "grams": 110.0}
+    ],
+    "per_100g": {
+      "kcal": 195.0,
+      "protein_g": 12.0,
+      "carbs_g": 1.2,
+      "fat_g": 15.5,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-gebna-areesh",
+    "name_ar": "جبنة قريش",
+    "name_en": "Areesh Cheese",
+    "aliases": ["جبنة قريش", "جبنه قريش", "قريش", "areesh", "gebna areesh", "cottage cheese"],
+    "portion_units": [
+      {"unit_ar": "قطعة صغيرة (ملعقتين)", "unit_en": "small piece (2 tbsp)", "grams": 60.0},
+      {"unit_ar": "قطعة متوسطة", "unit_en": "medium piece", "grams": 100.0}
+    ],
+    "per_100g": {
+      "kcal": 98.0,
+      "protein_g": 12.0,
+      "carbs_g": 3.0,
+      "fat_g": 4.0,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-gebna-beida",
+    "name_ar": "جبنة بيضاء براميلي",
+    "name_en": "White Feta Cheese",
+    "aliases": ["جبنة بيضاء", "جبنه بيضا", "جبنة براميلي", "جبنة اسطنبولي", "gebna beida", "feta"],
+    "portion_units": [
+      {"unit_ar": "قطعة صغيرة", "unit_en": "small slice", "grams": 50.0},
+      {"unit_ar": "قطعة متوسطة", "unit_en": "medium slice", "grams": 100.0}
+    ],
+    "per_100g": {
+      "kcal": 250.0,
+      "protein_g": 14.0,
+      "carbs_g": 2.5,
+      "fat_g": 20.0,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-zabadi",
+    "name_ar": "زبادي بلدي",
+    "name_en": "Plain Yogurt",
+    "aliases": ["زبادي", "زبادي بلدي", "علبة زبادي", "لبن رايب", "zabadi", "yogurt", "rayeb"],
+    "portion_units": [
+      {"unit_ar": "علبة صغيرة", "unit_en": "small cup", "grams": 105.0},
+      {"unit_ar": "علبة متوسطة", "unit_en": "medium cup", "grams": 170.0}
+    ],
+    "per_100g": {
+      "kcal": 65.0,
+      "protein_g": 3.5,
+      "carbs_g": 4.8,
+      "fat_g": 3.3,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-chicken-grilled",
+    "name_ar": "فراخ مشوية",
+    "name_en": "Grilled Chicken",
+    "aliases": ["فراخ مشوية", "فراخ", "دجاج مشوي", "صدر فرخة", "ورك فرخة", "ferakh", "fraakh", "grilled chicken", "dajaj"],
+    "portion_units": [
+      {"unit_ar": "صدر فرخة مشوي", "unit_en": "chicken breast", "grams": 150.0},
+      {"unit_ar": "ورك فرخة مشوي", "unit_en": "chicken thigh", "grams": 130.0},
+      {"unit_ar": "ربع فرخة", "unit_en": "quarter chicken", "grams": 180.0}
+    ],
+    "per_100g": {
+      "kcal": 165.0,
+      "protein_g": 31.0,
+      "carbs_g": 0.0,
+      "fat_g": 3.6,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-meat-boiled",
+    "name_ar": "لحمة مسلوقة",
+    "name_en": "Boiled Beef",
+    "aliases": ["لحمة مسلوقة", "لحمة", "لحم بقري", "لحم كبده", "لحمة حمراء", "lahma", "la7ma", "meat", "beef"],
+    "portion_units": [
+      {"unit_ar": "قطعة لحمة متوسطة", "unit_en": "1 medium piece", "grams": 90.0},
+      {"unit_ar": "قطعتين لحمة", "unit_en": "2 pieces", "grams": 180.0}
+    ],
+    "per_100g": {
+      "kcal": 215.0,
+      "protein_g": 26.0,
+      "carbs_g": 0.0,
+      "fat_g": 12.0,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-fish-grilled",
+    "name_ar": "سمك بلطي مشوي",
+    "name_en": "Grilled Tilapia Fish",
+    "aliases": ["سمك مشوي", "سمك بلطي", "سمك", "بلطي مشوي", "سمكة", "samak", "samak mashwi", "bolti", "fish"],
+    "portion_units": [
+      {"unit_ar": "سمكة بلطي متوسطة", "unit_en": "1 medium fish", "grams": 200.0},
+      {"unit_ar": "سمكة بلطي كبيرة", "unit_en": "1 large fish", "grams": 300.0}
+    ],
+    "per_100g": {
+      "kcal": 115.0,
+      "protein_g": 23.0,
+      "carbs_g": 0.0,
+      "fat_g": 2.5,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-molokhia",
+    "name_ar": "ملوخية",
+    "name_en": "Egyptian Molokhia",
+    "aliases": ["ملوخية", "طبق ملوخية", "شوربة ملوخية", "molokhia", "molokheya", "mouloukhiya", "mulukhiyah"],
+    "portion_units": [
+      {"unit_ar": "طبق صغير (مغرفة)", "unit_en": "small bowl (1 ladle)", "grams": 150.0},
+      {"unit_ar": "طبق متوسط (مغرفتين)", "unit_en": "medium bowl (2 ladles)", "grams": 250.0}
+    ],
+    "per_100g": {
+      "kcal": 45.0,
+      "protein_g": 2.5,
+      "carbs_g": 4.5,
+      "fat_g": 2.0,
+      "fiber_g": 2.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-bamya",
+    "name_ar": "بامية بالصلصة",
+    "name_en": "Okra with Tomato Sauce",
+    "aliases": ["بامية", "طاجن بامية", "بامية بالدمعة", "طبق بامية", "bamya", "bameya", "okra"],
+    "portion_units": [
+      {"unit_ar": "طبق صغير (مغرفة)", "unit_en": "small bowl", "grams": 150.0},
+      {"unit_ar": "طبق متوسط", "unit_en": "medium bowl", "grams": 250.0}
+    ],
+    "per_100g": {
+      "kcal": 65.0,
+      "protein_g": 2.0,
+      "carbs_g": 8.0,
+      "fat_g": 2.5,
+      "fiber_g": 3.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-makarona-bechamel",
+    "name_ar": "مكرونة بشاميل",
+    "name_en": "Baked Macaroni Bechamel",
+    "aliases": ["مكرونة بشاميل", "بشاميل", "خرطة بشاميل", "قطعة مكرونة بشاميل", "bechamel", "makarona bechamel", "pasta bechamel"],
+    "portion_units": [
+      {"unit_ar": "خرطة صغيرة", "unit_en": "small square", "grams": 150.0},
+      {"unit_ar": "خرطة متوسطة", "unit_en": "medium square", "grams": 250.0},
+      {"unit_ar": "خرطة كبيرة", "unit_en": "large square", "grams": 350.0}
+    ],
+    "per_100g": {
+      "kcal": 210.0,
+      "protein_g": 8.5,
+      "carbs_g": 24.0,
+      "fat_g": 9.5,
+      "fiber_g": 1.2
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-mahshi-kromb",
+    "name_ar": "محشي كرنب",
+    "name_en": "Stuffed Cabbage Rolls",
+    "aliases": ["محشي كرنب", "محشي ملفوف", "صوابع محشي", "محشي", "mahshi", "ma7shi", "mahshi kromb"],
+    "portion_units": [
+      {"unit_ar": "5 صوابع محشي", "unit_en": "5 pieces", "grams": 150.0},
+      {"unit_ar": "طبق متوسط (10 صوابع)", "unit_en": "medium plate (10 pieces)", "grams": 300.0}
+    ],
+    "per_100g": {
+      "kcal": 135.0,
+      "protein_g": 3.0,
+      "carbs_g": 22.0,
+      "fat_g": 4.0,
+      "fiber_g": 2.5
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-mahshi-waraq-enab",
+    "name_ar": "محشي ورق عنب",
+    "name_en": "Stuffed Grape Leaves",
+    "aliases": ["ورق عنب", "محشي ورق عنب", "صوابع ورق عنب", "waraq enab", "ma7shi wara2 3enab"],
+    "portion_units": [
+      {"unit_ar": "6 صوابع ورق عنب", "unit_en": "6 pieces", "grams": 120.0},
+      {"unit_ar": "طبق متوسط (12 صباع)", "unit_en": "medium plate (12 pieces)", "grams": 240.0}
+    ],
+    "per_100g": {
+      "kcal": 145.0,
+      "protein_g": 3.5,
+      "carbs_g": 24.0,
+      "fat_g": 4.5,
+      "fiber_g": 3.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-shorbet-lesan-asfour",
+    "name_ar": "شوربة لسان عصفور",
+    "name_en": "Orzo Soup",
+    "aliases": ["لسان عصفور", "شوربة لسان عصفور", "شوربة", "طبق شوربة", "lesan asfour", "orzo soup", "shorba"],
+    "portion_units": [
+      {"unit_ar": "بولاق صغيرة (مغرفة)", "unit_en": "small bowl", "grams": 150.0},
+      {"unit_ar": "بولة متوسطة", "unit_en": "medium bowl", "grams": 250.0}
+    ],
+    "per_100g": {
+      "kcal": 70.0,
+      "protein_g": 2.5,
+      "carbs_g": 11.0,
+      "fat_g": 1.8,
+      "fiber_g": 0.5
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-salata-baladi",
+    "name_ar": "سلطة بلدي خضراء",
+    "name_en": "Egyptian Green Salad",
+    "aliases": ["سلطة", "سلطة بلدي", "سلطة خضراء", "طبق سلطة", "salata", "salad", "green salad", "salata baladi"],
+    "portion_units": [
+      {"unit_ar": "طبق صغير", "unit_en": "small bowl", "grams": 100.0},
+      {"unit_ar": "طبق متوسط", "unit_en": "medium bowl", "grams": 200.0}
+    ],
+    "per_100g": {
+      "kcal": 30.0,
+      "protein_g": 1.2,
+      "carbs_g": 5.0,
+      "fat_g": 0.5,
+      "fiber_g": 2.2
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-tahina",
+    "name_ar": "طحينة",
+    "name_en": "Tahini Dip",
+    "aliases": ["طحينة", "سلطة طحينة", "طحينه", "معلقة طحينة", "tahina", "taheena", "tahini"],
+    "portion_units": [
+      {"unit_ar": "ملعقة كبيرة", "unit_en": "1 tablespoon", "grams": 20.0},
+      {"unit_ar": "ملعقتين كبيرتين", "unit_en": "2 tablespoons", "grams": 40.0}
+    ],
+    "per_100g": {
+      "kcal": 450.0,
+      "protein_g": 14.0,
+      "carbs_g": 16.0,
+      "fat_g": 38.0,
+      "fiber_g": 4.5
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-baba-ghanouj",
+    "name_ar": "بابا غنوج",
+    "name_en": "Baba Ghanoush",
+    "aliases": ["بابا غنوج", "سلطة بابا غنوج", "باذنجان مشوي بطحينة", "baba ghanouj", "baba ghannoug"],
+    "portion_units": [
+      {"unit_ar": "ملعقتين كبيرتين", "unit_en": "2 tablespoons", "grams": 50.0},
+      {"unit_ar": "طبق صغير", "unit_en": "small plate", "grams": 120.0}
+    ],
+    "per_100g": {
+      "kcal": 120.0,
+      "protein_g": 2.5,
+      "carbs_g": 8.0,
+      "fat_g": 9.0,
+      "fiber_g": 3.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-tea-sugar",
+    "name_ar": "شاي بسكر",
+    "name_en": "Black Tea with Sugar",
+    "aliases": ["شاي", "كوباية شاي", "كباية شاي", "شاي بسكر", "شاي احمر", "shai", "shay", "tea", "shai b sokar"],
+    "portion_units": [
+      {"unit_ar": "كوب شاي (معلقة سكر)", "unit_en": "1 cup (1 tsp sugar)", "grams": 150.0},
+      {"unit_ar": "كوب شاي (معلقتين سكر)", "unit_en": "1 cup (2 tsp sugar)", "grams": 160.0},
+      {"unit_ar": "كوب شاي بدون سكر", "unit_en": "1 cup (no sugar)", "grams": 150.0}
+    ],
+    "per_100g": {
+      "kcal": 25.0,
+      "protein_g": 0.1,
+      "carbs_g": 6.2,
+      "fat_g": 0.0,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-tea-milk",
+    "name_ar": "شاي بلبن",
+    "name_en": "Tea with Milk",
+    "aliases": ["شاي بلبن", "شاي بحليب", "كوباية شاي بلبن", "shai b laban", "tea with milk"],
+    "portion_units": [
+      {"unit_ar": "مج شاي بلبن", "unit_en": "1 mug", "grams": 200.0}
+    ],
+    "per_100g": {
+      "kcal": 55.0,
+      "protein_g": 2.2,
+      "carbs_g": 7.5,
+      "fat_g": 1.8,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-coffee",
+    "name_ar": "قهوة مظبوط",
+    "name_en": "Egyptian Coffee",
+    "aliases": ["قهوة", "فنجان قهوة", "قهوة مظبوط", "قهوة سادة", "قهوة زيادة", "ahwa", "qahwa", "coffee"],
+    "portion_units": [
+      {"unit_ar": "فنجان قهوة", "unit_en": "1 small cup", "grams": 60.0}
+    ],
+    "per_100g": {
+      "kcal": 35.0,
+      "protein_g": 0.4,
+      "carbs_g": 8.0,
+      "fat_g": 0.1,
+      "fiber_g": 0.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-dates",
+    "name_ar": "تمر / بلح",
+    "name_en": "Dates",
+    "aliases": ["تمر", "بلح", "رطب", "تمرات", "بلحات", "dates", "tamr", "balah"],
+    "portion_units": [
+      {"unit_ar": "حبة تمر واحدة", "unit_en": "1 date", "grams": 15.0},
+      {"unit_ar": "3 تمرات", "unit_en": "3 dates", "grams": 45.0}
+    ],
+    "per_100g": {
+      "kcal": 280.0,
+      "protein_g": 2.2,
+      "carbs_g": 75.0,
+      "fat_g": 0.4,
+      "fiber_g": 7.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-banana",
+    "name_ar": "موز",
+    "name_en": "Banana",
+    "aliases": ["موز", "موزة", "صباع موز", "banana", "moza", "mouz"],
+    "portion_units": [
+      {"unit_ar": "موزة متوسطة", "unit_en": "1 medium banana", "grams": 120.0}
+    ],
+    "per_100g": {
+      "kcal": 90.0,
+      "protein_g": 1.1,
+      "carbs_g": 23.0,
+      "fat_g": 0.3,
+      "fiber_g": 2.6
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-apple",
+    "name_ar": "تفاح",
+    "name_en": "Apple",
+    "aliases": ["تفاح", "تفاحة", "تفاح احمر", "تفاح اخضر", "apple", "toffah", "tefah"],
+    "portion_units": [
+      {"unit_ar": "تفاحة متوسطة", "unit_en": "1 medium apple", "grams": 150.0}
+    ],
+    "per_100g": {
+      "kcal": 52.0,
+      "protein_g": 0.3,
+      "carbs_g": 14.0,
+      "fat_g": 0.2,
+      "fiber_g": 2.4
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-orange",
+    "name_ar": "برتقال",
+    "name_en": "Orange",
+    "aliases": ["برتقال", "برتقالة", "برتقان", "برتقانة", "orange", "borto2an", "bortoqan"],
+    "portion_units": [
+      {"unit_ar": "برتقالة متوسطة", "unit_en": "1 medium orange", "grams": 140.0}
+    ],
+    "per_100g": {
+      "kcal": 48.0,
+      "protein_g": 0.9,
+      "carbs_g": 12.0,
+      "fat_g": 0.1,
+      "fiber_g": 2.4
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-konafa",
+    "name_ar": "كنافة / بسبوسة",
+    "name_en": "Konafa / Basbousa",
+    "aliases": ["كنافة", "بسبوسة", "قطعة كنافة", "قطعة بسبوسة", "حلويات شرقية", "konafa", "basbousa", "kunafa"],
+    "portion_units": [
+      {"unit_ar": "قطعة صغيرة", "unit_en": "small square", "grams": 75.0},
+      {"unit_ar": "قطعة متوسطة", "unit_en": "medium square", "grams": 130.0}
+    ],
+    "per_100g": {
+      "kcal": 380.0,
+      "protein_g": 4.5,
+      "carbs_g": 58.0,
+      "fat_g": 15.0,
+      "fiber_g": 1.0
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  },
+  {
+    "id": "food-adas-asfar",
+    "name_ar": "شوربة عدس أصفر",
+    "name_en": "Yellow Lentil Soup",
+    "aliases": ["شوربة عدس", "عدس اصفر", "عدس", "طبق عدس", "adas", "3adas", "lentil soup"],
+    "portion_units": [
+      {"unit_ar": "بولة صغيرة", "unit_en": "small bowl", "grams": 150.0},
+      {"unit_ar": "بولة متوسطة", "unit_en": "medium bowl", "grams": 250.0}
+    ],
+    "per_100g": {
+      "kcal": 85.0,
+      "protein_g": 5.0,
+      "carbs_g": 14.0,
+      "fat_g": 1.2,
+      "fiber_g": 2.8
+    },
+    "source": "author estimate, unverified",
+    "verified": false
+  }
+]

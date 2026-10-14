@@ -1,9 +1,9 @@
-# Rafiq (رفيق) — EHR Review Assistant for Diabetes Specialists
+# Rafiq (رفيق) — EHR Review Assistant for Nutrition Specialists
 
 > **"Every finding, traced to its source."**  
 > *(أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic)*
 
-Rafiq is an assistive workspace designed for endocrinologists, diabetes specialists, and clinical nutritionists reviewing patient records. It synthesizes longitudinal patient electronic health records (lab results, specialist notes, dilated eye exams, foot screenings) into an actionable, source-grounded brief.
+Rafiq is an assistive workspace designed for diabetes nutrition specialists reviewing patient records in Egypt. It synthesizes longitudinal patient electronic health records (lab results, specialist notes, dilated eye exams, foot screenings) into an actionable, source-grounded brief.
 
 Rafiq supports specialist judgment only: it highlights patterns, screening gaps, and clinical considerations while preserving specialist autonomy. Every clinical claim is bound to a verified source citation, and all numerical computations and clinical screening rules are executed deterministically in code.
 
@@ -27,7 +27,7 @@ The patient workspace aggregates EHR records into seven structured sections:
 
 Rafiq follows strict product safety and engineering constraints defined in [AGENTS.md](AGENTS.md):
 
-- **Support Specialist Judgment Only**: Rafiq supports specialist judgment only. It never outputs a diagnosis, a drug dose, or a directive instruction. All advisories are framed neutrally (e.g., *"worth reviewing with the treating physician"*).
+- **Support Specialist Judgment Only**: Rafiq supports specialist judgment only. It never outputs a diagnosis, a drug dose, or a directive instruction. All advisories are framed neutrally (e.g., *"worth reviewing with the specialist"*).
 - **Mandatory Source Grounding**: Every insight, care gap, and consideration must carry a complete source citation (document name, page number, quotation, and date). Uncited claims are rejected.
 - **Strict Refusal Guarantee**: If a requested fact or finding is absent from the patient's records, Rafiq replies with the canonical refusal:
   > `"المعلومة دي مش موجودة في ملف المريض."`  

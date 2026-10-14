@@ -32,3 +32,14 @@ This log documents key architectural, engineering, and design decisions for Clin
   5. **Audit Actor Continuity**: Existing historical `audit_log` rows retain the legacy actor `"DR (Doctor)"`; only new entries default to `"NS (Nutrition Specialist)"`.
 - **Consequences**: Seamless transition with zero data loss or migration breaks, preserving all 23 deterministic safety guard tests and patient isolation guarantees.
 
+### ADR-003: Patient Chat Architecture, Evaluation Prompt Lineage, and Demo Role Security
+- **Date**: 2026-10-14
+- **Status**: Accepted
+- **Context**: Introducing the Patient Meal-Logging Chat feature and closing governance gaps identified during rebrand verification.
+- **Decision**:
+  1. **Evaluation Prompt Lineage**: The user prompt in `eval/run_eval.py` was updated from `"Answer the question following all clinical decision support rules."` to `"Answer the question following all practice guidance rules."`. Because this instruction is directly passed to the LLM as part of the user prompt, evaluation results generated prior to this change in `eval/results/` are historical baselines and not like-for-like with future live runs.
+  2. **Citation Verification on Absence Items**: Absences (e.g., missing annual UACR, missing foot exam) are represented with `source=None` and populated `absence_note`. The deterministic citation verifier (`app/rag/verify.py`) and schema enforce that absences are categorized as missing/unrecorded items, never as grounded factual claims from file chunks.
+  3. **Docker Environment Status**: Docker is installed on the deployment environment, but the background daemon was inactive during initial pre-flight checks. Fresh evaluation runs will be executed once the engine daemon is running.
+  4. **Demo Authentication & Role Enforcement**: In the absence of an enterprise identity provider, role context is communicated via `X-Actor`. Patient routes enforce default-deny: requests without an `X-Actor` header are rejected (403), patient actors (`PT <pid>`) cannot access specialist endpoints or other patients' charts, and specialists (`NS`) retain read access. This is an application-level demo tag and explicitly does NOT provide cryptographic authentication or network-level protection against spoofing.
+- **Consequences**: Clean architectural boundary between specialist EHR workflows and patient meal-logging chat, preserving safety and isolation guarantees without inventing security claims.
+

@@ -114,7 +114,15 @@ def test_clean_detail():
     from app.services import _clean_detail
 
     assert _clean_detail("Eye_Report_2023-11-20.pdf p.1 (dated 14 Oct 2023)") == "dated 14 Oct 2023"
-    assert _clean_detail("Lab_Report_2026-05-11.pdf p.1") == "Lab_Report_2026-05-11.pdf p.1"
+    assert _clean_detail("Lab_Report_2026-05-11.pdf p.1") == "Last recorded on 11 May 2026."
+    assert (
+        _clean_detail("Visit_Note_2026-06-02.pdf p.1", name="Foot exam", status="missing")
+        == "Diabetic foot examination was missed during evaluation on 2 Jun 2026."
+    )
+    assert (
+        _clean_detail("Eye_Report_2024-01-15.pdf p.1", name="Retinal exam", status="overdue")
+        == "Last recorded on 15 Jan 2024."
+    )
 
 
 def test_suggested_questions_unknown_patient(client):

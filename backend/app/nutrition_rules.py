@@ -6,6 +6,7 @@ NOTE: must be reviewed against ADA guidance / a clinician before real use.
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from typing import Any
 
@@ -15,27 +16,38 @@ from typing import Any
 # ==============================================================================
 
 # Gap threshold in months: overdue if no HbA1c in last N months (ADA: 3-6 mos)
+# Clinician to confirm before real clinical use.
 HBA1C_GAP_MONTHS: int = 6
 
 # Gap threshold in months: overdue if no renal panel in last N months
+# Clinician to confirm before real clinical use.
 RENAL_PANEL_GAP_MONTHS: int = 12
 
 # Gap threshold in days: overdue if no meal-log entry in last N days
 # Only evaluated if meal-log source exists and is enabled for that patient
+# Clinician to confirm before real clinical use.
 MEAL_LOG_GAP_DAYS: int = 3
 
 # Weight / BMI check threshold in months
+# Clinician to confirm before real clinical use.
 WEIGHT_BMI_GAP_MONTHS: int = 12
 
-# Renal function alert threshold (eGFR threshold for Metformin review)
+# Renal function alert thresholds for Metformin review
+# Clinician to confirm before real clinical use:
+# - eGFR < 60 mL/min/1.73m² (mild-to-moderate impairment): severity "review"
+# - eGFR < 30 mL/min/1.73m² (severe reduction / sharp drop): severity "urgent_review"
+# - sharp drop: eGFR drop >= 20 mL/min/1.73m² between visits: severity "urgent_review"
 METFORMIN_EGFR_REVIEW_THRESHOLD: float = 60.0
+METFORMIN_EGFR_URGENT_THRESHOLD: float = 30.0
+EGFR_SHARP_DROP_THRESHOLD: float = 20.0
 
-# Standard neutral clinical phrasing for medication considerations
-MEDICATION_CONSIDERATION_NOTE: str = "نقطة تستحق المراجعة مع الطبيب المعالج"
+# Standard neutral clinical phrasing for medication considerations (English in UI)
+MEDICATION_CONSIDERATION_NOTE_EN: str = "worth reviewing with the treating physician"
+MEDICATION_CONSIDERATION_NOTE: str = MEDICATION_CONSIDERATION_NOTE_EN
 
 
 # ==============================================================================
-# Hypoglycemia Symptom Keyword Lists (English and Arabic)
+# Hypoglycemia Symptom Keyword Lists & Negation Patterns
 # ==============================================================================
 
 HYPOGLYCEMIA_KEYWORDS: list[str] = [
@@ -62,7 +74,29 @@ HYPOGLYCEMIA_KEYWORDS: list[str] = [
     "رعشة",
 ]
 
+# Negation prefixes / phrases in English and Arabic
+# When a note matches one of these negation patterns in the same sentence/clause,
+# the hypoglycemia finding must NOT fire.
+HYPOGLYCEMIA_NEGATION_PATTERNS: list[str] = [
+    # English
+    r"\bno\s+(?:documented\s+|reported\s+|recurrent\s+|recent\s+|acute\s+)?hypoglycemia\b",
+    (
+        r"\bdenies\s+(?:any\s+)?"
+        r"(?:hypoglycemia|low\s+blood\s+sugar|low\s+glucose|night-time\s+sweating|shakiness|tremors)\b"
+    ),
+    r"\bno\s+episodes\s+of\s+(?:hypoglycemia|low\s+glucose|low\s+blood\s+sugar)\b",
+    r"\bno\s+(?:low\s+glucose|low\s+blood\s+sugar|night-time\s+sweating|cold\s+sweats)\b",
+    r"\bwithout\s+(?:any\s+)?(?:hypoglycemia|episodes\s+of\s+low\s+sugar)\b",
+    # Arabic
+    r"(?:لا\s+يوجد|لا\s+توجد)\s+(?:اي\s+)?(?:هبوط|اعراض\s+هبوط|نقص\s+سكر|انخفاض\s+سكر)",
+    r"(?:مفيش|مافيش)\s+(?:اي\s+)?(?:هبوط|اعراض\s+هبوط|سكر\s+واطي|رعشة)",
+    r"ينفي\s+(?:حدوث\s+)?(?:اي\s+)?(?:هبوط|اعراض\s+هبوط|نقص\s+سكر)",
+    r"تنفي\s+(?:حدوث\s+)?(?:اي\s+)?(?:هبوط|اعراض\s+هبوط|نقص\s+سكر)",
+    r"دون\s+(?:اي\s+)?(?:هبوط|اعراض\s+هبوط)",
+]
+
 # Phrases that escalate hypoglycemia finding to "urgent_review"
+# Clinician to confirm before real clinical use.
 HYPOGLYCEMIA_EMERGENCY_KEYWORDS: list[str] = [
     # English
     "loss of consciousness",
@@ -106,21 +140,24 @@ def _months_between(d1: date, d2: date) -> float:
 
 def evaluate_hba1c_gap(
     as_of_date: str | date,
-    hba1c_points: list[dict[str, Any]] | None,
+    hba1c_points: list[dict[str, Any]] | None = None,
     threshold_months: int = HBA1C_GAP_MONTHS,
+    *,
+    hba1c_records: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Check if patient has an HbA1c measurement within threshold_months."""
+    pts = hba1c_points if hba1c_points is not None else (hba1c_records or [])
     ref_date = _parse_date(as_of_date) or date.today()
-    if not hba1c_points:
+    if not pts:
         return {
             "name": "HbA1c",
             "status": "missing",
-            "detail": f"لم يتم تسجيل تحليل السكر التراكمي (HbA1c) في آخر {threshold_months} أشهر",
+            "detail": f"No HbA1c test recorded in the last {threshold_months} months.",
             "last_date": None,
         }
 
     valid_dates = []
-    for pt in hba1c_points:
+    for pt in pts:
         d = _parse_date(pt.get("date"))
         if d:
             valid_dates.append(d)
@@ -129,25 +166,27 @@ def evaluate_hba1c_gap(
         return {
             "name": "HbA1c",
             "status": "missing",
-            "detail": f"لم يتم تسجيل تحليل السكر التراكمي (HbA1c) في آخر {threshold_months} أشهر",
+            "detail": f"No HbA1c test recorded in the last {threshold_months} months.",
             "last_date": None,
         }
 
     latest = max(valid_dates)
     diff_months = _months_between(ref_date, latest)
+    d_str = latest.strftime("%Y-%m-%d")
     if diff_months > threshold_months:
-        d_str = latest.strftime("%Y-%m-%d")
         return {
             "name": "HbA1c",
             "status": "overdue",
-            "detail": f"تحليل السكر التراكمي متأخر ({d_str} - أكثر من {threshold_months} أشهر)",
+            "detail": (
+                f"HbA1c test overdue (last recorded on {d_str}, > {threshold_months} months ago)."
+            ),
             "last_date": latest.isoformat(),
         }
 
     return {
         "name": "HbA1c",
         "status": "done",
-        "detail": f"تم إجراء الفحص بتاريخ {latest.strftime('%Y-%m-%d')}",
+        "detail": f"HbA1c test completed on {d_str}.",
         "last_date": latest.isoformat(),
     }
 
@@ -163,9 +202,7 @@ def evaluate_renal_panel_gap(
         return {
             "name": "Renal panel",
             "status": "missing",
-            "detail": (
-                f"لم يتم تسجيل وظائف كلى (eGFR / Creatinine / UACR) في آخر {threshold_months} شهراً"
-            ),
+            "detail": f"No renal panel recorded in the last {threshold_months} months.",
             "last_date": None,
         }
 
@@ -179,25 +216,27 @@ def evaluate_renal_panel_gap(
         return {
             "name": "Renal panel",
             "status": "missing",
-            "detail": f"لم يتم تسجيل وظائف كلى في آخر {threshold_months} شهراً",
+            "detail": f"No renal panel recorded in the last {threshold_months} months.",
             "last_date": None,
         }
 
     latest = max(valid_dates)
     diff_months = _months_between(ref_date, latest)
+    d_str = latest.strftime("%Y-%m-%d")
     if diff_months > threshold_months:
-        d_str = latest.strftime("%Y-%m-%d")
         return {
             "name": "Renal panel",
             "status": "overdue",
-            "detail": f"فحص وظائف الكلى متأخر ({d_str} - أكثر من {threshold_months} شهراً)",
+            "detail": (
+                f"Renal panel overdue (last recorded on {d_str}, > {threshold_months} months ago)."
+            ),
             "last_date": latest.isoformat(),
         }
 
     return {
         "name": "Renal panel",
         "status": "done",
-        "detail": f"تم إجراء الفحص بتاريخ {latest.strftime('%Y-%m-%d')}",
+        "detail": f"Renal panel completed on {d_str}.",
         "last_date": latest.isoformat(),
     }
 
@@ -220,7 +259,7 @@ def evaluate_meal_log_gap(
         return {
             "name": "Meal log",
             "status": "missing",
-            "detail": "ميزة تسجيل الوجبات مفعلة ولكن لم يتم تسجيل أي وجبات بعد",
+            "detail": "Meal-log tracking is enabled but no meal entries have been recorded yet.",
             "last_date": None,
         }
 
@@ -234,19 +273,19 @@ def evaluate_meal_log_gap(
         return {
             "name": "Meal log",
             "status": "missing",
-            "detail": "لا توجد تواريخ مسجلة في سجل الوجبات",
+            "detail": "No valid dates found in meal-log records.",
             "last_date": None,
         }
 
     latest = max(valid_dates)
     days_diff = (ref_date - latest).days
+    d_str = latest.strftime("%Y-%m-%d")
     if days_diff > threshold_days:
-        d_str = latest.strftime("%Y-%m-%d")
         return {
             "name": "Meal log",
             "status": "overdue",
             "detail": (
-                f"انقطاع في تسجيل الوجبات منذ أكثر من {threshold_days} أيام (آخر تسجيل {d_str})"
+                f"Meal logging gap: no meals logged for > {threshold_days} days (last log {d_str})."
             ),
             "last_date": latest.isoformat(),
         }
@@ -254,9 +293,74 @@ def evaluate_meal_log_gap(
     return {
         "name": "Meal log",
         "status": "done",
-        "detail": f"سجل الوجبات محدث (آخر تسجيل {latest.strftime('%Y-%m-%d')})",
+        "detail": f"Meal logging is up-to-date (last log {d_str}).",
         "last_date": latest.isoformat(),
     }
+
+
+def evaluate_weight_bmi_gap(
+    as_of_date: str | date,
+    weight_records: list[dict[str, Any]] | None,
+    threshold_months: int = WEIGHT_BMI_GAP_MONTHS,
+) -> dict[str, Any]:
+    """Check if patient has weight/BMI recorded within threshold_months."""
+    ref_date = _parse_date(as_of_date) or date.today()
+    if not weight_records:
+        return {
+            "name": "Weight/BMI",
+            "status": "missing",
+            "detail": (
+                f"No weight or BMI measurement recorded in the last {threshold_months} months."
+            ),
+            "last_date": None,
+        }
+
+    valid_dates = []
+    for r in weight_records:
+        d = _parse_date(r.get("date"))
+        if d:
+            valid_dates.append(d)
+
+    if not valid_dates:
+        return {
+            "name": "Weight/BMI",
+            "status": "missing",
+            "detail": (
+                f"No weight or BMI measurement recorded in the last {threshold_months} months."
+            ),
+            "last_date": None,
+        }
+
+    latest = max(valid_dates)
+    diff_months = _months_between(ref_date, latest)
+    d_str = latest.strftime("%Y-%m-%d")
+    if diff_months > threshold_months:
+        return {
+            "name": "Weight/BMI",
+            "status": "overdue",
+            "detail": (
+                f"Weight/BMI measurement overdue (last recorded on {d_str}, "
+                f"> {threshold_months} months ago)."
+            ),
+            "last_date": latest.isoformat(),
+        }
+
+    return {
+        "name": "Weight/BMI",
+        "status": "done",
+        "detail": f"Weight/BMI recorded on {d_str}.",
+        "last_date": latest.isoformat(),
+    }
+
+
+def is_hypoglycemia_negated(text: str) -> bool:
+    """Return True if hypoglycemia keywords appear only within negated phrases."""
+    text_clean = re.sub(r"[إأآ]", "ا", text).lower()
+    for neg_pat in HYPOGLYCEMIA_NEGATION_PATTERNS:
+        pat_clean = re.sub(r"[إأآ]", "ا", neg_pat)
+        if re.search(pat_clean, text_clean, re.IGNORECASE):
+            return True
+    return False
 
 
 def scan_notes_for_hypoglycemia(
@@ -264,8 +368,11 @@ def scan_notes_for_hypoglycemia(
 ) -> list[dict[str, Any]]:
     """Scan visit/clinic notes for hypoglycemia mentions in Arabic and English.
 
-    Severity is 'review', or escalates to 'urgent_review' if emergency is mentioned.
-    Each returned item includes reason, severity, and source citation.
+    Severity rules:
+    - Negated notes ("no hypoglycemia", "denies hypoglycemia"): ignored (returns []).
+    - Emergency / loss of consciousness / coma: 'urgent_review'.
+    - Routine / symptomatic mention: 'review'.
+    Each returned item includes reason, severity, statement, why, and citation.
     """
     findings = []
     for ch in chunks:
@@ -274,6 +381,8 @@ def scan_notes_for_hypoglycemia(
             continue
 
         text_lower = text.lower()
+
+        # Check for presence of any hypoglycemia keyword
         matched_kw = None
         for kw in HYPOGLYCEMIA_KEYWORDS:
             if kw in text_lower or kw in text:
@@ -281,6 +390,10 @@ def scan_notes_for_hypoglycemia(
                 break
 
         if not matched_kw:
+            continue
+
+        # Check if the mention is negated
+        if is_hypoglycemia_negated(text):
             continue
 
         # Check for emergency severity
@@ -300,7 +413,7 @@ def scan_notes_for_hypoglycemia(
         if not quote:
             quote = text[:150].strip()
 
-        chunk_id = ch.get("id", "")
+        chunk_id = ch.get("chunk_id") or ch.get("id", "")
         file_name = ch.get("file_name", "")
         page = ch.get("page", 1)
         doc_date = ch.get("date")
@@ -308,17 +421,30 @@ def scan_notes_for_hypoglycemia(
         findings.append(
             {
                 "reason": (
-                    "رصد أعراض هبوط سكر طارئة في الملاحظات السريرية"
+                    "Emergency hypoglycemia symptoms documented in clinical notes"
                     if is_emergency
-                    else "رصد أعراض هبوط سكر مدونة في الملاحظات السريرية"
+                    else "Hypoglycemia symptoms documented in clinical notes"
                 ),
                 "severity": sev,
                 "statement": (
-                    "تم ذكر أعراض هبوط سكر حادة تستدعي مراجعة عاجلة"
+                    (
+                        "Severe hypoglycemia event documented in clinical notes. "
+                        "Urgent review recommended."
+                    )
                     if is_emergency
-                    else "تم رصد أعراض هبوط سكر في ملاحظات المتابعة"
+                    else "Low glucose symptoms documented in follow-up notes. Review recommended."
                 ),
-                "why": "وجود أعراض هبوط سكر يتطلب مراجعة النمط الغذائي وجرعات العلاج مع الطبيب",
+                "why": (
+                    (
+                        "Severe hypoglycemia episode reported in records; "
+                        "requires urgent review with physician."
+                    )
+                    if is_emergency
+                    else (
+                        "Documented low glucose symptoms; worth reviewing meal timing "
+                        "and medication plan with clinician."
+                    )
+                ),
                 "citation": {
                     "chunk_id": chunk_id,
                     "file_name": file_name,
@@ -333,44 +459,65 @@ def scan_notes_for_hypoglycemia(
 
 def evaluate_medication_considerations(
     medications: list[str],
-    egfr_points: list[dict[str, Any]] | None,
+    egfr_points: list[dict[str, Any]] | None = None,
     citations_by_concept: dict[str, dict[str, Any]] | None = None,
+    *,
+    egfr_trends: list[dict[str, Any]] | None = None,
+    citations: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Generate medication-related considerations without giving prescriptions or dosing.
 
-    Always phrased neutrally as 'نقطة تستحق المراجعة مع الطبيب المعالج'.
+    Severity rules (clinician to confirm):
+    - Slight eGFR reduction below 60 (e.g. 50-59): severity 'review'.
+    - Severe reduction (< 30) OR sharp drop (>= 20 points drop): severity 'urgent_review'.
+    Always phrased neutrally as 'worth reviewing with the treating physician'.
     Requires a valid source citation to be included.
     """
     items = []
-    citations = citations_by_concept or {}
+    cits = citations_by_concept if citations_by_concept is not None else (citations or {})
+    points = egfr_points if egfr_points is not None else (egfr_trends or [])
 
     has_metformin = any("metformin" in m.lower() for m in medications)
-    if has_metformin and egfr_points:
+    if has_metformin and points:
         sorted_egfr = sorted(
-            [p for p in egfr_points if _parse_date(p.get("date"))],
+            [p for p in points if _parse_date(p.get("date"))],
             key=lambda x: _parse_date(x["date"]),
         )
         if sorted_egfr:
             latest_egfr = sorted_egfr[-1]["value"]
-            is_below_threshold = latest_egfr < METFORMIN_EGFR_REVIEW_THRESHOLD
-            has_fallen = len(sorted_egfr) >= 2 and sorted_egfr[0]["value"] > latest_egfr
+            first_egfr = sorted_egfr[0]["value"]
+            drop_amount = first_egfr - latest_egfr if len(sorted_egfr) >= 2 else 0.0
 
-            if is_below_threshold or has_fallen:
-                citation = citations.get("egfr") or citations.get("nephrology")
+            is_below_review = latest_egfr < METFORMIN_EGFR_REVIEW_THRESHOLD
+            has_fallen = len(sorted_egfr) >= 2 and drop_amount > 0
+
+            if is_below_review or has_fallen:
+                citation = cits.get("egfr") or cits.get("nephrology")
                 if citation:
+                    # Severity determination:
+                    # eGFR < 30 OR sharp drop >= 20 points -> urgent_review
+                    # eGFR slightly below 60 without sharp drop -> review
+                    is_urgent = (
+                        latest_egfr < METFORMIN_EGFR_URGENT_THRESHOLD
+                        or drop_amount >= EGFR_SHARP_DROP_THRESHOLD
+                    )
+                    sev = "urgent_review" if is_urgent else "review"
+
                     items.append(
                         {
                             "id": "cons-metformin-egfr",
-                            "severity": "urgent_review" if latest_egfr < 45 else "review",
+                            "severity": sev,
                             "statement": (
-                                f"انخفاض معدل الترشيح الكلي (eGFR: {latest_egfr}) "
-                                f"بالتزامن مع استمرار الميتفورمين: {MEDICATION_CONSIDERATION_NOTE}."
+                                f"eGFR recorded at {latest_egfr} mL/min/1.73m² with ongoing "
+                                f"Metformin: {MEDICATION_CONSIDERATION_NOTE_EN}."
                             ),
                             "why": (
-                                f"سجل eGFR قيمة {latest_egfr} mL/min/1.73m² بينما المريض "
-                                f"يتناول Metformin. {MEDICATION_CONSIDERATION_NOTE}."
+                                f"eGFR recorded at {latest_egfr} mL/min/1.73m² while the "
+                                "patient is prescribed Metformin. This is "
+                                f"{MEDICATION_CONSIDERATION_NOTE_EN}."
                             ),
                             "source": citation,
                         }
                     )
+
     return items

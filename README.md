@@ -1,11 +1,11 @@
-# Rafiq (رفيق) — Clinical Decision Support for Diabetes Specialists
+# Rafiq (رفيق) — EHR Review Assistant for Diabetes Specialists
 
 > **"Every finding, traced to its source."**  
 > *(أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic)*
 
-Rafiq is an AI-assisted clinical decision support workspace designed specifically for endocrinologists, diabetes specialists, and clinical nutritionists. It synthesizes longitudinal patient electronic health records (lab results, specialist notes, dilated eye exams, foot screenings) into an actionable, source-grounded clinical brief.
+Rafiq is an assistive workspace designed for endocrinologists, diabetes specialists, and clinical nutritionists reviewing patient records. It synthesizes longitudinal patient electronic health records (lab results, specialist notes, dilated eye exams, foot screenings) into an actionable, source-grounded brief.
 
-Rafiq operates strictly as specialized decision support: it highlights patterns, screening gaps, and clinical considerations while preserving specialist autonomy. Every clinical claim is bound to a verified source citation, and all numerical computations and clinical screening rules are executed deterministically in code.
+Rafiq supports specialist judgment only: it highlights patterns, screening gaps, and clinical considerations while preserving specialist autonomy. Every clinical claim is bound to a verified source citation, and all numerical computations and clinical screening rules are executed deterministically in code.
 
 ---
 
@@ -13,7 +13,7 @@ Rafiq operates strictly as specialized decision support: it highlights patterns,
 
 The patient workspace aggregates EHR records into seven structured sections:
 
-1. **Patient Header & Demographics**: Patient identifier, age, duration of diabetes, diagnosis type, and active prescribed medications.
+1. **Patient Header & Demographics**: Patient identifier, age, duration of diabetes, diabetes type, and active prescribed medications.
 2. **File Coverage & Audit Summary**: Explicit accounting of all patient files, distinguishing readable documents from scanned or unreadable attachments.
 3. **Clinical Snapshot**: High-priority findings categorized by severity (`urgent_review`, `review`, `info`), prioritized and anchored to specific documents.
 4. **Deterministic Trends**: Longitudinal trajectories for Glycated Hemoglobin (HbA1c) and Estimated Glomerular Filtration Rate (eGFR) against clinical targets.
@@ -27,7 +27,7 @@ The patient workspace aggregates EHR records into seven structured sections:
 
 Rafiq follows strict product safety and engineering constraints defined in [AGENTS.md](AGENTS.md):
 
-- **Specialist Decision Support Only**: Rafiq never outputs a diagnosis, a drug dose, or a directive instruction. All advisories are framed neutrally (e.g., *"worth reviewing with the treating physician"*).
+- **Support Specialist Judgment Only**: Rafiq supports specialist judgment only. It never outputs a diagnosis, a drug dose, or a directive instruction. All advisories are framed neutrally (e.g., *"worth reviewing with the treating physician"*).
 - **Mandatory Source Grounding**: Every insight, care gap, and consideration must carry a complete source citation (document name, page number, quotation, and date). Uncited claims are rejected.
 - **Strict Refusal Guarantee**: If a requested fact or finding is absent from the patient's records, Rafiq replies with the canonical refusal:
   > `"المعلومة دي مش موجودة في ملف المريض."`  
@@ -122,16 +122,16 @@ Evaluates the deterministic rules engine against synthetic fixtures covering rea
 backend\.venv\Scripts\python eval/run_rules_eval.py
 ```
 
-*Results from `eval/rules_eval_report.md`:*
-| Rule Name | Count (n) | Precision | Recall | Accuracy |
+*Author-written regression cases (`eval/rules_eval_report.md`):*
+| Rule Name | Regression Cases (n) | Passed / Total | Severity Matches | Status |
 | :--- | :---: | :---: | :---: | :---: |
-| `hba1c_gap` | 5 | 100.0% | 100.0% | 100.0% |
-| `hypoglycemia_scan` | 5 | 100.0% | 100.0% | 100.0% |
-| `meal_log_gap` | 3 | 100.0% | 100.0% | 100.0% |
-| `medication_consideration` | 7 | 100.0% | 100.0% | 100.0% |
-| `renal_panel_gap` | 5 | 100.0% | 100.0% | 100.0% |
-| `weight_bmi_gap` | 3 | 100.0% | 100.0% | 100.0% |
-| **Overall Total** | **28** | **100.0%** | **100.0%** | **100.0%** |
+| `hba1c_gap` | 5 | 5/5 | 2/2 | Passed |
+| `hypoglycemia_scan` | 5 | 5/5 | 3/3 | Passed |
+| `meal_log_gap` | 3 | 3/3 | 1/1 | Passed |
+| `medication_consideration` | 7 | 7/7 | 4/4 | Passed |
+| `renal_panel_gap` | 5 | 5/5 | 3/3 | Passed |
+| `weight_bmi_gap` | 3 | 3/3 | 2/2 | Passed |
+| **Overall Total** | **28** | **28/28** | **All Evaluated** | **All Passed** |
 
 ### 3. RAG Baseline Evaluation Harness
 
@@ -150,4 +150,4 @@ backend\.venv\Scripts\python eval/report.py
 ## License & Disclaimer
 
 *أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic.*  
-Rafiq is a clinical decision support tool designed to assist healthcare professionals. Final medical judgment and treatment decisions remain solely with the licensed physician.
+Rafiq is an assistive tool that supports specialist judgment only. Final decisions remain solely with the specialist. All demo data is synthetic.

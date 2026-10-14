@@ -1,9 +1,9 @@
-# ClinSight Synthetic Patient Dataset
+# Rafiq Synthetic Patient Dataset
 
-This directory contains the reproducible synthetic patient dataset and ground-truth validation suite for ClinSight decision support evaluation.
+This directory contains the reproducible synthetic patient dataset and ground-truth validation suite for Rafiq specialist EHR review evaluation.
 
 ## Clinical Safety & Ground Rules (per `AGENTS.md`)
-- **Decision Support Only:** Never outputs a diagnosis or drug dosage. Findings use neutral clinical phrasing like *"worth reviewing"*.
+- **Specialist Judgment Only:** Never outputs a diagnosis or drug dosage. Findings use neutral clinical phrasing like *"worth reviewing"*.
 - **Strict Grounding:** Every insight carries exact source attribution (`source_file`, `page`, and quoted text).
 - **Refusal Guarantee:** If a query cannot be answered from patient files, ClinSight replies with the canonical refusal text:
   ```text

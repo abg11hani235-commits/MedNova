@@ -171,53 +171,52 @@ def main() -> None:
             s["tn"] += 1
 
     total_tp = sum(v["tp"] for v in stats.values())
-    total_fp = sum(v["fp"] for v in stats.values())
-    total_fn = sum(v["fn"] for v in stats.values())
     total_tn = sum(v["tn"] for v in stats.values())
     total_n = sum(v["n"] for v in stats.values())
 
     # Build markdown report
     md_lines = [
-        "# Rafiq Clinical & Nutrition Rules Engine Evaluation Report",
+        "# Rafiq Clinical & Nutrition Rules Regression Report",
         "",
-        "Deterministic evaluation of rules in `backend/app/nutrition_rules.py` against `eval/rules_cases.jsonl`.",
+        "> **Methodology Note & Transparency**:",
+        "> These 28 cases in `eval/rules_cases.jsonl` are author-written regression tests designed",
+        "> to verify deterministic code execution, not an independent clinical validation.",
+        "> Test fixtures, thresholds, and rule parameters were iteratively adjusted during development.",
+        "> Results reflect code consistency across author-defined scenarios rather than empirical diagnostic accuracy.",
         "",
-        "| Rule Name | Count (n) | Precision | Recall | Accuracy | Severity Matches |",
-        "| :--- | :---: | :---: | :---: | :---: | :---: |",
+        "### Regression Cases Summary",
+        "",
+        "| Rule Name | Regression Cases (n) | Passed / Total | Severity Matches | Status |",
+        "| :--- | :---: | :---: | :---: | :---: |",
     ]
 
     print("\n" + "=" * 78)
-    print("RAFIQ RULES ENGINE EVALUATION RESULTS")
+    print("RAFIQ RULES ENGINE REGRESSION TEST RESULTS")
     print("=" * 78)
     print(
-        f"{'Rule Name':<28} {'n':<6} {'Precision':<12} {'Recall':<12} {'Accuracy':<10}"
+        f"{'Rule Name':<28} {'n':<6} {'Passed':<12} {'Severity Matches':<18} {'Status':<10}"
     )
     print("-" * 78)
 
     for rule, d in sorted(stats.items()):
-        tp, fp, fn, tn, n = d["tp"], d["fp"], d["fn"], d["tn"], d["n"]
-        prec = tp / (tp + fp) if (tp + fp) > 0 else 1.0
-        rec = tp / (tp + fn) if (tp + fn) > 0 else 1.0
-        acc = (tp + tn) / n if n > 0 else 1.0
+        tp, tn, n = d["tp"], d["tn"], d["n"]
+        passed = tp + tn
         sev_ok = f"{tp - d['sev_mismatch']}/{tp}" if tp > 0 else "N/A"
+        status = "Passed" if passed == n else "Failed"
 
-        print(f"{rule:<28} {n:<6} {prec:<12.1%} {rec:<12.1%} {acc:<10.1%}")
-        md_lines.append(
-            f"| `{rule}` | {n} | {prec:.1%} | {rec:.1%} | {acc:.1%} | {sev_ok} |"
-        )
+        print(f"{rule:<28} {n:<6} {passed}/{n:<10} {sev_ok:<18} {status:<10}")
+        md_lines.append(f"| `{rule}` | {n} | {passed}/{n} | {sev_ok} | {status} |")
 
-    tot_prec = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 1.0
-    tot_rec = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 1.0
-    tot_acc = (total_tp + total_tn) / total_n if total_n > 0 else 1.0
-
+    total_passed = total_tp + total_tn
+    overall_status = "All Passed" if total_passed == total_n else "Mismatches Found"
     print("-" * 78)
     print(
-        f"{'TOTAL / OVERALL':<28} {total_n:<6} {tot_prec:<12.1%} {tot_rec:<12.1%} {tot_acc:<10.1%}"
+        f"{'TOTAL / OVERALL':<28} {total_n:<6} {total_passed}/{total_n:<10} {'All Evaluated':<18} {overall_status:<10}"
     )
     print("=" * 78 + "\n")
 
     md_lines.append(
-        f"| **Overall Total** | **{total_n}** | **{tot_prec:.1%}** | **{tot_rec:.1%}** | **{tot_acc:.1%}** | **All Passed** |"
+        f"| **Overall Total** | **{total_n}** | **{total_passed}/{total_n}** | **All Evaluated** | **{overall_status}** |"
     )
     md_lines.append("")
 
@@ -226,7 +225,7 @@ def main() -> None:
         for cid, r, msg in mismatches:
             print(f"  - [{cid}] {r}: {msg}")
     else:
-        print("ALL TEST CASES PASSED WITH 100% PRECISION AND RECALL.")
+        print("ALL 28 AUTHOR-WRITTEN REGRESSION CASES PASSED.")
 
     REPORT_FILE.write_text("\n".join(md_lines), encoding="utf-8")
     print(f"\nSaved evaluation report to: {REPORT_FILE}")

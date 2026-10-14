@@ -330,9 +330,7 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
     ]
 
     # 5. Medication consideration (Metformin + eGFR)
-    if any("metformin" in m.lower() for m in (p.medications or [])) and not any(
-        "metformin" in c.statement.lower() or c.id == "cons-metformin-egfr" for c in considerations
-    ):
+    if any("metformin" in m.lower() for m in (p.medications or [])):
         med_citations = {}
         egfr_chunk = db.scalars(
             select(Chunk)
@@ -357,23 +355,32 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
             egfr_trends=p.trends.get("egfr", []),
             citations=med_citations,
         )
-        for item in med_items:
-            considerations.append(
-                schemas.Consideration(
-                    id=item["id"],
-                    severity=item["severity"],
-                    statement=item["statement"],
-                    why=item["why"],
-                    source=item.get("source"),
+
+        matched_existing = False
+        if med_items:
+            rule_sev = med_items[0]["severity"]
+            for c in considerations:
+                if "metformin" in c.statement.lower() or (
+                    "egfr" in c.statement.lower() and "metformin" in (c.why or "").lower()
+                ):
+                    c.severity = rule_sev
+                    matched_existing = True
+
+        if not matched_existing and med_items:
+            for item in med_items:
+                considerations.append(
+                    schemas.Consideration(
+                        id=item["id"],
+                        severity=item["severity"],
+                        statement=item["statement"],
+                        why=item["why"],
+                        source=item.get("source"),
+                    )
                 )
-            )
 
     # 6. Hypoglycemia scan from notes
     all_chunks = db.scalars(select(Chunk).where(Chunk.patient_id == p.id)).all()
-    if all_chunks and not any(
-        "hypoglycemia" in c.statement.lower() or "glucose" in c.statement.lower()
-        for c in considerations
-    ):
+    if all_chunks:
         chunk_dicts = []
         for c in all_chunks:
             f = db.get(File, c.file_id)
@@ -387,17 +394,27 @@ def build_brief(db: Session, p: Patient) -> schemas.Brief:
                 }
             )
         hypo_findings = scan_notes_for_hypoglycemia(chunk_dicts)
-        for idx, hf in enumerate(hypo_findings):
-            considerations.append(
-                schemas.Consideration(
-                    id=f"cons-hypo-{idx + 1}",
-                    severity=hf["severity"],
-                    statement=hf["statement"],
-                    why=hf["why"],
-                    source=schemas.Source(**hf["citation"]) if hf.get("citation") else None,
-                )
-            )
+        matched_hypo = False
+        if hypo_findings:
+            hypo_sev = hypo_findings[0]["severity"]
+            for c in considerations:
+                if "hypoglycemia" in c.statement.lower() or "glucose" in c.statement.lower():
+                    c.severity = hypo_sev
+                    matched_hypo = True
 
+        if not matched_hypo and hypo_findings:
+            for idx, hf in enumerate(hypo_findings):
+                considerations.append(
+                    schemas.Consideration(
+                        id=f"cons-hypo-{idx + 1}",
+                        severity=hf["severity"],
+                        statement=hf["statement"],
+                        why=hf["why"],
+                        source=schemas.Source(**hf["citation"]) if hf.get("citation") else None,
+                    )
+                )
+
+    snapshot = sorted(snapshot, key=lambda s: SEV_RANK.get(s.severity, 9))
     considerations = sorted(considerations, key=lambda c: SEV_RANK.get(c.severity, 9))
 
     return schemas.Brief(

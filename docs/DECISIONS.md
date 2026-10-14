@@ -23,7 +23,7 @@ This log documents key architectural, engineering, and design decisions for Clin
 ### ADR-002: Rebrand to Rafiq for Egyptian Nutrition Specialists
 - **Date**: 2026-10-13
 - **Status**: Accepted
-- **Context**: Pivot the product layer from generic physician decision support to "Rafiq", tailored specifically for diabetes nutrition specialists in Egypt. The core architecture remains decision support only: deterministic rules compute numbers/trends/gaps while the LLM extracts text with mandatory citations.
+- **Context**: Pivot the product layer from generic physician decision support to "Rafiq", tailored specifically for diabetes nutrition specialists in Egypt. The core architecture supports specialist judgment only: deterministic rules compute numbers/trends/gaps while the LLM extracts text with mandatory citations.
 - **Decision**:
   1. Rebrand application name to "Rafiq" across UI titles, routes/navigation, packages, and documentation.
   2. Adopt canonical Arabic disclaimer (`أداة مساعدة، القرار النهائي للأخصائي. كل البيانات في الـDemo Synthetic.`) and refusal text (`المعلومة دي مش موجودة في ملف المريض.`) with `dir="auto"`.

@@ -3,7 +3,7 @@
 Evaluation dataset, retrieval pipelines, verification metrics, and reporting harness for clinical retrieval-based chat on synthetic diabetes EHR records.
 
 Follows all rules in [AGENTS.md](../AGENTS.md):
-- **Decision support only**: Responses phrase findings as "worth reviewing".
+- **Specialist judgment only**: Responses phrase findings as "worth reviewing".
 - **Strict citation grounding**: Every clinical claim carries document name, page, and quoted snippet.
 - **Strict refusal**: If the finding is absent from patient files, replies exactly: `"I couldn't find this in the patient's files."`
 - **Patient isolation**: Every query is filtered by `patient_id`.
@@ -130,17 +130,17 @@ Combines all pipeline run artifacts in `eval/results/` into a concise comparison
 
 ---
 
-## 7. Deterministic Rules Engine Evaluation
+## 7. Deterministic Rules Engine Regression Suite
 
 In accordance with AGENTS.md Rule 4, all clinical trends, screening care gaps, and medication considerations are computed strictly by deterministic Python rules in `backend/app/nutrition_rules.py` rather than by an LLM.
 
-To evaluate the precision, recall, and accuracy of these rules:
+To execute the author-written regression suite:
 
 ```powershell
-# Run the rules evaluation suite (evaluates 28 synthetic test cases across all 6 rules)
+# Run the rules regression suite (evaluates 28 author-written regression test cases across all 6 rules)
 .\backend\.venv\Scripts\python eval/run_rules_eval.py
 ```
 
-- **Test Cases**: `eval/rules_cases.jsonl` (contains 28 test cases covering real patient fixtures and edge cases: boundary values, missing data, negations, English/Arabic phrases).
+- **Test Cases**: `eval/rules_cases.jsonl` (contains 28 author-written regression cases covering real patient fixtures and edge cases: boundary values, missing data, negations, English/Arabic phrases). Note: These are author-written regression tests to verify code consistency, not an independent clinical validation; test fixtures and rule thresholds were iteratively adjusted during development.
 - **Report**: Generated at `eval/rules_eval_report.md`.
 

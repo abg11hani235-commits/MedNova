@@ -889,3 +889,127 @@ def test_wiring_hypoglycemia_notes_through_build_brief(db_session):
         "hypoglycemia" in c.statement.lower() or "glucose" in c.statement.lower()
         for c in brief_neg.considerations
     )
+
+
+def test_brief_considerations_severity_matches_rule_output(db_session):
+    """Test fails if a considerations severity in final brief disagrees with rule output."""
+    from app.models import Insight
+
+    p = Patient(
+        id="p-sev-test",
+        display_name="Severity Test Patient",
+        age=58,
+        diabetes_type="Type 2",
+        as_of_date=AS_OF,
+        medications=["Metformin"],
+        trends={
+            "egfr": [
+                {"date": "2025-03-12", "value": 78.0},
+                {"date": "2026-06-18", "value": 59.0},
+            ]
+        },
+        care_gaps=[],
+    )
+    db_session.add(p)
+
+    f = File(
+        id="f-egfr-test", patient_id=p.id, name="Nephrology.pdf", kind="specialist", date=AS_OF
+    )
+    db_session.add(f)
+    ch = Chunk(
+        id="c-egfr-test",
+        patient_id=p.id,
+        file_id=f.id,
+        page=1,
+        text="Nephrology note: eGFR 59 mL/min/1.73m² down from 78.",
+    )
+    db_session.add(ch)
+
+    # Seed an insight with an outdated/divergent severity ("urgent_review")
+    ins = Insight(
+        id="p-sev-test-f1",
+        patient_id=p.id,
+        type="falling_egfr",
+        severity="urgent_review",  # intentionally disagrees with calibrated rule
+        statement=(
+            "eGFR fell from 78 to 59 over 6 visits while Metformin continues. Worth reviewing."
+        ),
+        why="eGFR fell while on Metformin.",
+        source_chunk_id=ch.id,
+        rank=0,
+    )
+    db_session.add(ins)
+    db_session.commit()
+
+    # Rule output calculation: drop is 19 (< 20) and latest is 59 (< 60 but not < 30) -> "review"
+    rule_items = evaluate_medication_considerations(
+        medications=p.medications,
+        egfr_trends=p.trends["egfr"],
+        citations={"egfr": {"chunk_id": ch.id, "file_name": f.name, "page": 1, "quote": ch.text}},
+    )
+    assert len(rule_items) == 1
+    expected_rule_sev = rule_items[0]["severity"]
+    assert expected_rule_sev == "review"
+
+    # Build brief through services.py
+    brief = build_brief(db_session, p)
+
+    # Locate the consideration
+    matching_c = next(
+        (c for c in brief.considerations if "metformin" in c.statement.lower()),
+        None,
+    )
+    assert matching_c is not None, "Expected Metformin consideration in brief"
+
+    # MUST match rule output ("review"), and MUST NOT keep the discordant seeded "urgent_review"
+    assert matching_c.severity == expected_rule_sev, (
+        f"Brief consideration severity '{matching_c.severity}' disagrees with "
+        f"rule output '{expected_rule_sev}'!"
+    )
+    assert matching_c.severity != "urgent_review"
+
+
+def test_brief_considerations_severity_matches_rule_output_urgent(db_session):
+    """Test confirms that when rule calculates urgent_review (drop >= 20), brief reflects it."""
+    p_urgent = Patient(
+        id="p-urgent-test",
+        display_name="Urgent Test Patient",
+        age=62,
+        diabetes_type="Type 2",
+        as_of_date=AS_OF,
+        medications=["Metformin"],
+        trends={
+            "egfr": [
+                {"date": "2025-01-10", "value": 85.0},
+                {"date": "2026-06-18", "value": 55.0},  # drop is 30 points (>= 20)
+            ]
+        },
+        care_gaps=[],
+    )
+    db_session.add(p_urgent)
+    f = File(id="f-urg", patient_id=p_urgent.id, name="Nephro.pdf", kind="specialist", date=AS_OF)
+    db_session.add(f)
+    ch = Chunk(
+        id="c-urg",
+        patient_id=p_urgent.id,
+        file_id=f.id,
+        page=1,
+        text="Nephrology review: eGFR 55 down from 85.",
+    )
+    db_session.add(ch)
+    db_session.commit()
+
+    rule_items = evaluate_medication_considerations(
+        medications=p_urgent.medications,
+        egfr_trends=p_urgent.trends["egfr"],
+        citations={"egfr": {"chunk_id": ch.id, "file_name": f.name, "page": 1, "quote": ch.text}},
+    )
+    assert rule_items[0]["severity"] == "urgent_review"
+
+    brief = build_brief(db_session, p_urgent)
+    matching_c = next(
+        (c for c in brief.considerations if "metformin" in c.statement.lower()),
+        None,
+    )
+    assert matching_c is not None
+    assert matching_c.severity == "urgent_review"

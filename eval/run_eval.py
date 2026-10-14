@@ -592,7 +592,7 @@ def run_pipeline_eval(
                 f"Patient ID: {pid}\n\n"
                 f"PATIENT CHUNKS:\n{context_str}\n\n"
                 f"QUESTION: {question}\n\n"
-                "Answer the question following all clinical decision support rules."
+                "Answer the question following all practice guidance rules."
             )
             prompt_text = SYSTEM_PROMPT + "\n" + user_msg
             prompt_chars = len(prompt_text)
